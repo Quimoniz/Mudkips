@@ -281,8 +281,12 @@ public class Mudkips extends JavaPlugin {
 	 if(mP.inPrivateChat()) {
 	   String chatPartnerName = mP.getPrivateChatPartner();
 	   Player chatPartner = this.getServer().getPlayer(chatPartnerName);
-	   privateChat(p, chatPartner, msg);
-	   e.setCancelled(true);
+	   if(chatPartner != null) {
+	     privateChat(p, chatPartner, msg);
+	     e.setCancelled(true);
+	   } else {
+		 mP.setPrivateChatPartner(null);
+	   }
 	 }
   if(!e.isCancelled()) {
 	this.getServer().broadcastMessage(CHAT_MSG.replaceAll("%s",p.getDisplayName()).replaceAll("%m",e.getMessage()));
