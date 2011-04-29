@@ -391,9 +391,15 @@ public class Mudkips extends JavaPlugin {
   }
   public Player matchPlayer(String playerName) {
 	java.util.List<Player> playerList = this.getServer().matchPlayer(playerName);
-	if(playerList.size() > 0)
-	  return playerList.get(0);
-	else
+	if(playerList.size() > 0) {
+	  if(playerList.size() > 1) {
+		  for(Player pMatch : playerList)
+			if(pMatch.getName().indexOf(playerName) >= 0)
+			  return pMatch;
+		  return playerList.get(0);
+	  } else
+	      return playerList.get(0);
+  } else
 	  if(mapPlayers.containsKey(playerName))
 		return mapPlayers.get(playerName).getPlayer();
 	  else
