@@ -189,7 +189,95 @@ public class Mudkips extends JavaPlugin {
     		     pSender.sendMessage(ChatColor.RED + "Unable to locate you in the playerlist. " + ChatColor.GRAY + "(maybe rejoining in will fix it)");
     	   }
     	 }
-      }  
+      } else if(rawCommand.indexOf("weather") == 0) {
+    	 if(sender.isOp()) { //pSender == null || pSender.isOp()
+           if(args.length == 0) {
+        	 if(pSender != null) {
+        	   org.bukkit.World worldPlayerIsIn = pSender.getWorld();
+        	   if(worldPlayerIsIn.hasStorm()) {
+        		 pSender.sendMessage("It's a " + (worldPlayerIsIn.isThundering()?" harsh Thunder- ":"") + " Storm, which will probably last " + ((int)(worldPlayerIsIn.getWeatherDuration()/24000.00*100))/100.00 + " days");
+        	   } else {
+        		 pSender.sendMessage("It's shun-shine!!!!");
+        	   }
+        	 } else { //If invoked from Console
+        	   java.util.List <org.bukkit.World> worlds = this.getServer().getWorlds();
+        	   String [] output = null;
+        	   if(worlds.size() > 1) {
+        	     output = new String[worlds.size()];
+        	     int i = 0;
+        	     for(org.bukkit.World currentWorld : worlds) {
+        	       output [i] = currentWorld.getName() + ": ";
+        	       if(currentWorld.hasStorm()) {
+        	         output [i] += " Stormy for " + currentWorld.getWeatherDuration() + " Ticks";
+        	         if(currentWorld.isThundering())
+        	           output[i] += ", also Thundering for " + currentWorld.getThunderDuration() + " more Ticks";
+        	       } else
+        		     output[i] += " shun-shine!!!!";
+        	     }
+        	   } else {
+        	     output = new String[1];
+        	     org.bukkit.World theWorld=worlds.get(0);
+      	         output [0] = theWorld.getName() + ": ";
+      	         if(theWorld.hasStorm()) {
+      	           output [0] += " Stormy for " + theWorld.getWeatherDuration() + " Ticks";
+      	           if(theWorld.isThundering())
+      	             output[0] += ", also Thundering for " + theWorld.getThunderDuration() + " more Ticks";
+      	         } else
+      		       output[0] += " shun-shine!!!!";
+        	   }
+        	   sender.sendMessage(this.concatenate(output, "\n", 0));
+        	 }
+           } else if(args.length >= 1) {
+        	 String param = null;
+        	 org.bukkit.World worldToChangeWeatherIn = null;
+        	 if(args.length >= 2) {
+        	   worldToChangeWeatherIn = this.getServer().getWorld(args[0]);
+        	   param = args[1].toLowerCase();
+        	 } else {
+        	   if(pSender != null) {
+        	     worldToChangeWeatherIn = pSender.getWorld();
+        	   } else {
+        		 java.util.List <org.bukkit.World> listOfWorlds = this.getServer().getWorlds();
+        		 if(listOfWorlds.size() == 1)
+        	       worldToChangeWeatherIn = listOfWorlds.get(0);
+        	   }
+        	   param = args[0].toLowerCase();
+        	 }
+        	 if(worldToChangeWeatherIn != null) {
+		       if(param.equals("on") || param.equals("true") || param.equals("active") || param.equals("activated") || param.equals("yes") || param.equals("y")) {
+				 if(worldToChangeWeatherIn.hasStorm()) {
+			       sender.sendMessage(ChatColor.YELLOW + "Notice: It's storming now.");
+		    	   this.getServer().getLogger().log(Level.INFO, "Storm activated" + (pSender!=null?(" by " + pSender.getName()):" from Console"));
+				 }
+		    	 worldToChangeWeatherIn.setStorm(true);
+		         return true;
+		       } else if(param.equals("off") || param.equals("false") || param.equals("0") || param.equals("unactive") || param.equals("deactivated") || param.equals("no") || param.equals("n")) {
+			     if(worldToChangeWeatherIn.hasStorm()) {
+		           sender.sendMessage(ChatColor.YELLOW + "Notice: It stopped storming now.");
+		           this.getServer().getLogger().log(Level.INFO, "Storm deactivated" + (pSender!=null?(" by " + pSender.getName()):" from Console"));
+			     }
+		         worldToChangeWeatherIn.setStorm(false);
+		         return true;
+		       } else {
+		    	 int stormTicks = 0;
+		    	 try {
+		    	   stormTicks = Integer.parseInt(param);
+		    	 } catch(NumberFormatException exc) {
+		    		 sender.sendMessage("Failed to parse the parameter Ticks");
+		    	     return false; 
+		    	 }
+			     this.getServer().getLogger().log(Level.INFO, "Storm set to " + stormTicks + " Ticks" + (pSender!=null?(" by " + pSender.getName()):" from Console"));
+				 worldToChangeWeatherIn.setWeatherDuration(stormTicks);
+				 return true;
+		       }
+        	 } else {
+        	   sender.sendMessage(ChatColor.RED + "Could not associate a World!"); 
+        	 }
+            }
+    	 } else {
+    	   sender.sendMessage(ChatColor.YELLOW + "Notice: You are not authorized.");
+    	 }
+      }
       return true;
     }
   public void saveProperties() {
@@ -205,6 +293,8 @@ public class Mudkips extends JavaPlugin {
 	myProps.setProperty("private-chat-leave", PRIVATE_CHAT_LEAVE);
 	myProps.setProperty("chat-message", CHAT_MSG);
     myProps.setProperty("action-propagation-distance", ""+ACTION_PROPAGATION_DISTANCE);
+    myProps.setProperty("chat-propagation-distance", ""+CHAT_PROPAGATION_DISTANCE);
+    myProps.setProperty("whisper-propagation-distance", ""+WHISPER_PROPAGATION_DISTANCE);
 	FileOutputStream outStream = null;
 	try {
       outStream = new FileOutputStream(pathToProps,false);
