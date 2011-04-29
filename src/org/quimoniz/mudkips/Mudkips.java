@@ -39,6 +39,9 @@ public class Mudkips extends JavaPlugin {
     private String PRIVATE_CHAT_LEAVE;
     private String CHAT_MSG;
     private int ACTION_PROPAGATION_DISTANCE;
+    private int CHAT_PROPAGATION_DISTANCE;
+    private int WHISPER_PROPAGATION_DISTANCE;
+    private String WHISPER_MSG;
 	private String pathToProps = "mudkips.properties";
     @Override
 	public void onDisable() {
@@ -57,12 +60,7 @@ public class Mudkips extends JavaPlugin {
     	  this.getServer().getLogger().log(Level.SEVERE, "Mudkips couldn't load Properties file to be located at \"" + pathToProps + "\".");
       }
       WELCOME_MESSAGE = myProps.getProperty("motd", "Welcome %s");
-      AFK_RETURN_MSG_DURATION = 1000 * 60 * 2;
-      try {
-        AFK_RETURN_MSG_DURATION = Integer.parseInt(myProps.getProperty("afk-return-message-duration", "" + (1000 * 60 *2)));
-      } catch(NumberFormatException exc) {
-    	getServer().getLogger().log(Level.WARNING,"Couldn't parse property \"afk-return-message-duration\" in " + pathToProps + " to int.");
-      }
+      AFK_RETURN_MSG_DURATION = loadIntFromProperties("afk-return-message-duration",1000 * 60 * 1);
       AFK_RETURN_MSG = myProps.getProperty("afk-return-msg", "is back");
       HELP_MSG = myProps.getProperty("help", ChatColor.WHITE + "Mudkips Plugin Commands:\n"
     		                                                 + ChatColor.BLACK + "+ " + ChatColor.YELLOW + "/afk <message>\n  " + ChatColor.AQUA + "Toggles afk status\n"
@@ -77,12 +75,10 @@ public class Mudkips extends JavaPlugin {
       PRIVATE_CHAT_JOIN = myProps.getProperty("private-chat-join", ChatColor.YELLOW +  "Notice: You are in private chat with \"" + ChatColor.WHITE + "%s" + ChatColor.YELLOW + "\"");
       PRIVATE_CHAT_LEAVE = myProps.getProperty("private-chat-leave", ChatColor.YELLOW + "Notice: You left private chat with \"" + ChatColor.WHITE + "%s" + ChatColor.YELLOW + "\"");
       CHAT_MSG = myProps.getProperty("chat-message", ChatColor.WHITE + "> %s says \"" + "%m" + "\"" );
-      ACTION_PROPAGATION_DISTANCE = 0;
-      try {
-    	  ACTION_PROPAGATION_DISTANCE = Integer.parseInt(myProps.getProperty("action-propagation-distance", "70"));
-      } catch(NumberFormatException exc) {
-    	getServer().getLogger().log(Level.WARNING,"Couldn't parse property \"action-propagation-distance\" in " + pathToProps + " to int.");
-      }
+      ACTION_PROPAGATION_DISTANCE = loadIntFromProperties("action-propagation-distance",70);
+      CHAT_PROPAGATION_DISTANCE = loadIntFromProperties("action-propagation-distance",300);
+      WHISPER_PROPAGATION_DISTANCE = loadIntFromProperties("whisper-propagation-distance",10);
+      WHISPER_MSG = myProps.getProperty("whisper-message", ChatColor.AQUA + "> %s whispers \"" + ChatColor.WHITE + "%m" + ChatColor.AQUA + "\"");
       //Register Player events
       PluginManager pm = this.getServer().getPluginManager();
       MPlayerListener playerListener = new MPlayerListener(this);
@@ -91,6 +87,15 @@ public class Mudkips extends JavaPlugin {
       pm.registerEvent(Event.Type.PLAYER_QUIT, playerListener, Event.Priority.Normal, this);
       
       saveProperties();
+	}
+	public int loadIntFromProperties(String propertyName, int defaultValue) {
+	  int parsedInt = defaultValue;
+	  try {
+	    parsedInt = Integer.parseInt(myProps.getProperty(propertyName, ""+defaultValue));
+	  } catch(NumberFormatException exc) {
+	  	getServer().getLogger().log(Level.WARNING,"Couldn't parse property \""+propertyName+"\" in " + pathToProps + " to int.");
+	  }
+	  return parsedInt;
 	}
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
       //firstof casting sender to a Player ...
@@ -267,9 +272,9 @@ public class Mudkips extends JavaPlugin {
 	//Checking which player have been mentioned by some chatter, at the begin or end of a message
 	while(iter.hasNext()) {
 	  AliasEntry<String, String> alias=iter.next();
-      msg = msg.toLowerCase();
-	  if(msg.matches(regexStart[0] + alias.getKey().toLowerCase() + regexStart[1]) || msg.matches(regexStart[0] + alias.getValue().toLowerCase() + regexStart[1])
-		|| msg.matches(regexEnd[0] + alias.getKey().toLowerCase() + regexEnd[1]) || msg.matches(regexEnd[0] + alias.getValue().toLowerCase()+ regexEnd[1])) {
+      String msgLowerCase = msg.toLowerCase();
+	  if(msgLowerCase.matches(regexStart[0] + alias.getKey().toLowerCase() + regexStart[1]) || msgLowerCase.matches(regexStart[0] + alias.getValue().toLowerCase() + regexStart[1])
+		|| msgLowerCase.matches(regexEnd[0] + alias.getKey().toLowerCase() + regexEnd[1]) || msgLowerCase.matches(regexEnd[0] + alias.getValue().toLowerCase()+ regexEnd[1])) {
 	    MudkipsPlayer mP = mapPlayers.get(alias.getKey());
 		if(mP != null)
 		  playerMentioned(mP, p);  

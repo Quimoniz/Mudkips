@@ -29,3 +29,9 @@ commands:
   pmsg:
     description: Permanently write a message to someone
     usage: /msg <Player> <Message>
+  weather:
+    description: Sets the Weather
+    usage /weather [<Ticks>|On|Off|True|False]
+  shout:
+    description: Shout something to everyone on the server
+    usage: /shout <Message> 
