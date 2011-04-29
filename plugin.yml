@@ -1,0 +1,31 @@
+name: Mudkips
+main: org.quimoniz.mudkips.Mudkips
+version: 0.01
+commands:
+  online:
+    description: Retrieves the List of players being online
+    usage: /online
+  who:
+    description: Retrieves the List of players being online
+    usage: /who
+  playerlist:
+    description: Retrieves the List of players being online
+    usage: /playerlist
+  motd:
+    description: Displays the welcome message
+    usage: /motd
+  afk:
+    description: Sets afk status
+    usage: /afk
+  help:
+    description: Displays a brief help
+    usage: /help
+  me:
+    description: Describe what you are doing
+    usage: /me <What you do>
+  msg:
+    description: Write a message to someone
+    usage: /msg <Player> <Message>
+  pmsg:
+    description: Permanently write a message to someone
+    usage: /msg <Player> <Message>
