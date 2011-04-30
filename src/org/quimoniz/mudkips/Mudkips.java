@@ -245,7 +245,7 @@ public class Mudkips extends JavaPlugin {
         	 }
         	 if(worldToChangeWeatherIn != null) {
 		       if(param.equals("on") || param.equals("true") || param.equals("active") || param.equals("activated") || param.equals("yes") || param.equals("y")) {
-				 if(worldToChangeWeatherIn.hasStorm()) {
+				 if(!worldToChangeWeatherIn.hasStorm()) {
 			       sender.sendMessage(ChatColor.YELLOW + "Notice: It's storming now.");
 		    	   this.getServer().getLogger().log(Level.INFO, "Storm activated" + (pSender!=null?(" by " + pSender.getName()):" from Console"));
 				 }
@@ -266,8 +266,16 @@ public class Mudkips extends JavaPlugin {
 		    		 sender.sendMessage("Failed to parse the parameter Ticks");
 		    	     return false; 
 		    	 }
-			     this.getServer().getLogger().log(Level.INFO, "Storm set to " + stormTicks + " Ticks" + (pSender!=null?(" by " + pSender.getName()):" from Console"));
-				 worldToChangeWeatherIn.setWeatherDuration(stormTicks);
+			     if(stormTicks > 0) {
+			       worldToChangeWeatherIn.setStorm(true);
+				   worldToChangeWeatherIn.setWeatherDuration(stormTicks);
+				   this.getServer().getLogger().log(Level.INFO, "Storm set to " + stormTicks + " Ticks" + (pSender!=null?(" by " + pSender.getName()):" from Console"));
+			     } else {
+			       if(worldToChangeWeatherIn.hasStorm()) {
+			    	 worldToChangeWeatherIn.setStorm(false);
+			    	 sender.sendMessage(ChatColor.YELLOW + "Notice: It stopped storming now.");  
+			       }
+			     }
 				 return true;
 		       }
         	 } else {
