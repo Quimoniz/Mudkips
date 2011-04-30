@@ -31,7 +31,7 @@ commands:
     usage: /msg <Player> <Message>
   weather:
     description: Sets the Weather
-    usage: /weather [world] [<Ticks>|On|Off|True|False]
+    usage: /weather [world] [<Ticks>|On|Off|True|False] [thunder [<Ticks>|On|Off|True|False]]
   shout:
     description: Shout something to everyone on the server
     usage: /shout <Message> 

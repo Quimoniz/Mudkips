@@ -11,6 +11,7 @@ import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.World;
 
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -257,16 +258,30 @@ public class Mudkips extends JavaPlugin {
         	   }
         	   sender.sendMessage(this.concatenate(output, "\n", 0));
         	 }
-           } else if(args.length >= 1) {
-        	 //Changing the weather  
+           } else if(args.length >= 1) {//Changing the weather  
+        	 
         	  
-        	 //How about making param an array? so we can put like /weather On thunder 2000 OR /weather 2000 thunder Off
+        	 //How about making param an array? so we can do like '/weather On thunder 2000' OR '/weather 2000 thunder Off'
         	 String param = null;
+        	 String paramThunder = null;
         	 org.bukkit.World worldToChangeWeatherIn = null;
         	 //Separating the world Argument from the ON/OFF/Ticks Parameter
         	 if(args.length >= 2) {
-        	   worldToChangeWeatherIn = this.getServer().getWorld(args[0]);
         	   param = args[1].toLowerCase();
+        	   if(! param.equalsIgnoreCase("thunder")) {
+        	     worldToChangeWeatherIn = this.getServer().getWorld(args[0]);
+        	   } else {
+          		 java.util.List <org.bukkit.World> listOfWorlds = this.getServer().getWorlds();
+        		 if(listOfWorlds.size() == 1)
+        	       worldToChangeWeatherIn = listOfWorlds.get(0);
+        	   }
+        	   if(param.equalsIgnoreCase("thunder")) {
+        	     paramThunder = param = args[2].toLowerCase();
+        	     param = param = args[0].toLowerCase();
+        	   } else if(args.length >= 4) {
+        		 if(args[2].equalsIgnoreCase("thunder"))
+        		   paramThunder = args[3].toLowerCase();
+        	   }
         	 } else {
         	   if(pSender != null) {
         	     worldToChangeWeatherIn = pSender.getWorld();
@@ -278,43 +293,8 @@ public class Mudkips extends JavaPlugin {
         	   param = args[0].toLowerCase();
         	 }
         	 if(worldToChangeWeatherIn != null) {
-        	   //Activate Weather
-		       if(param.equals("on") || param.equals("true") || param.equals("active") || param.equals("activated") || param.equals("yes") || param.equals("y")) {
-				 if(!worldToChangeWeatherIn.hasStorm()) {
-			       sender.sendMessage(ChatColor.YELLOW + "Notice: It's storming now.");
-		    	   this.getServer().getLogger().log(Level.INFO, "Storm activated" + (pSender!=null?(" by " + pSender.getName()):" from Console"));
-				 }
-		    	 worldToChangeWeatherIn.setStorm(true);
-		         return true;
-		       //Deactivate Weather
-		       } else if(param.equals("off") || param.equals("false") || param.equals("0") || param.equals("unactive") || param.equals("deactivated") || param.equals("no") || param.equals("n")) {
-			     if(worldToChangeWeatherIn.hasStorm()) {
-		           sender.sendMessage(ChatColor.YELLOW + "Notice: It stopped storming now.");
-		           this.getServer().getLogger().log(Level.INFO, "Storm deactivated" + (pSender!=null?(" by " + pSender.getName()):" from Console"));
-			     }
-		         worldToChangeWeatherIn.setStorm(false);
-		         return true;
-		       //Specifically set the weather duration 
-		       } else {
-		    	 int stormTicks = 0;
-		    	 try {
-		    	   stormTicks = Integer.parseInt(param);
-		    	 } catch(NumberFormatException exc) {
-		    		 sender.sendMessage("Failed to parse the parameter Ticks");
-		    	     return false; 
-		    	 }
-			     if(stormTicks > 0) {
-			       worldToChangeWeatherIn.setStorm(true);
-				   worldToChangeWeatherIn.setWeatherDuration(stormTicks);
-				   this.getServer().getLogger().log(Level.INFO, "Storm set to " + stormTicks + " Ticks" + (pSender!=null?(" by " + pSender.getName()):" from Console"));
-			     } else {
-			       if(worldToChangeWeatherIn.hasStorm()) {
-			    	 worldToChangeWeatherIn.setStorm(false);
-			    	 sender.sendMessage(ChatColor.YELLOW + "Notice: It stopped storming now.");  
-			       }
-			     }
-				 return true;
-		       }
+        	   setWeather(worldToChangeWeatherIn, param, paramThunder, sender);
+
         	 } else {
         	   sender.sendMessage(ChatColor.RED + "Could not associate a World!"); 
         	 }
@@ -341,6 +321,7 @@ public class Mudkips extends JavaPlugin {
                pSender.sendMessage(ChatColor.RED + "You did not shout anything.");
             } else {
              //Maybe instead we could make a lightning strike right before the eyes of everyone, and announce the message
+             //even better, why not using Server.makeSound ( "weather.thunder") somethin?
          	 sender.sendMessage("Gods dont need to shout.");
             }
          }
@@ -618,6 +599,93 @@ public class Mudkips extends JavaPlugin {
 		return mapPlayers.get(playerName).getPlayer();
 	  else
         return null;
+  }
+  public boolean setWeather(World worldToChangeWeatherIn, String param, String paramThunder, CommandSender sender) {
+	Player pSender = null;
+	if(sender instanceof Player)
+	  pSender = (Player) sender;
+	 //Activate Weather
+    if(param.equals("on") || param.equals("true") || param.equals("active") || param.equals("activated") || param.equals("yes") || param.equals("y")) {
+	  if(!worldToChangeWeatherIn.hasStorm()) {
+	    sender.sendMessage(ChatColor.YELLOW + "Notice: It's storming now.");
+   	    this.getServer().getLogger().log(Level.INFO, "Storm activated" + (pSender!=null?(" by " + pSender.getName()):" from Console"));
+	  }
+   	  worldToChangeWeatherIn.setStorm(true);
+   	  if(paramThunder != null) {
+   		 setThunder(worldToChangeWeatherIn, param, sender);
+   	   }
+     return true;
+      //Deactivate Weather
+   } else if(param.equals("off") || param.equals("false") || param.equals("0") || param.equals("unactive") || param.equals("deactivated") || param.equals("no") || param.equals("n")) {
+	 if(worldToChangeWeatherIn.hasStorm()) {
+       sender.sendMessage(ChatColor.YELLOW + "Notice: It stopped storming now.");
+       this.getServer().getLogger().log(Level.INFO, "Storm deactivated" + (pSender!=null?(" by " + pSender.getName()):" from Console"));
+	  }
+      worldToChangeWeatherIn.setStorm(false);
+   	  if(paramThunder != null) {
+        setThunder(worldToChangeWeatherIn, param, sender);
+      }
+      return true;
+      //Specifically set the weather duration 
+   } else {
+   	 int stormTicks = 0;
+   	 try {
+   	   stormTicks = Integer.parseInt(param);
+   	 } catch(NumberFormatException exc) {
+   		 sender.sendMessage("Failed to parse the parameter Ticks");
+   	     return false; 
+   	 }
+	 if(stormTicks > 0) {
+	   worldToChangeWeatherIn.setStorm(true);
+	   worldToChangeWeatherIn.setWeatherDuration(stormTicks);
+	   this.getServer().getLogger().log(Level.INFO, "Storm set to " + stormTicks + " Ticks" + (pSender!=null?(" by " + pSender.getName()):" from Console"));
+	 } else {
+	   if(worldToChangeWeatherIn.hasStorm()) {
+	     worldToChangeWeatherIn.setStorm(false);
+	   	 sender.sendMessage(ChatColor.YELLOW + "Notice: It stopped storming now.");  
+	   }
+	 }
+  	if(paramThunder != null) {
+      setThunder(worldToChangeWeatherIn, param, sender);
+    }
+    return true;
+   }
+  }
+  public void setThunder(World worldToSetThunderIn, String param, CommandSender sender) {
+	Player pSender = null;
+	if(sender instanceof Player)
+	  pSender = (Player) sender;
+	if(param.equals("on") || param.equals("true") || param.equals("active") || param.equals("activated") || param.equals("yes") || param.equals("y")) {
+	  if(!worldToSetThunderIn.hasStorm()) {
+	    sender.sendMessage(ChatColor.YELLOW + "Notice: It's thundering now.");
+	    this.getServer().getLogger().log(Level.INFO, "Thunder activated" + (pSender!=null?(" by " + pSender.getName()):" from Console"));
+	  }
+	  worldToSetThunderIn.setThundering(true);
+	} else if(param.equals("off") || param.equals("false") || param.equals("0") || param.equals("unactive") || param.equals("deactivated") || param.equals("no") || param.equals("n")) {
+      if(worldToSetThunderIn.isThundering()) {
+		sender.sendMessage(ChatColor.YELLOW + "Notice: It stopped Thundering now.");
+		this.getServer().getLogger().log(Level.INFO, "Thundering deactivated" + (pSender!=null?(" by " + pSender.getName()):" from Console"));
+	  }
+      worldToSetThunderIn.setThundering(false);
+   } else {
+	 int thunderTicks = 0;
+   	 try {
+   	   thunderTicks = Integer.parseInt(param);
+   	 } catch(NumberFormatException exc) {
+   		 sender.sendMessage("Failed to parse the parameter Ticks");
+   	     return; 
+   	 }
+	 if(thunderTicks > 0) {
+	   worldToSetThunderIn.setThundering(true);
+	   worldToSetThunderIn.setThunderDuration(thunderTicks);
+	   this.getServer().getLogger().log(Level.INFO, "Thunder set to " + thunderTicks + " Ticks" + (pSender!=null?(" by " + pSender.getName()):" from Console"));
+	 } else {
+	   if(worldToSetThunderIn.hasStorm()) {
+	     worldToSetThunderIn.setStorm(false);
+	   	 sender.sendMessage(ChatColor.YELLOW + "Notice: It stopped thundering now.");  
+	   }
+	  }
+    }
   }
 }
 
