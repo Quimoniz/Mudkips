@@ -29,6 +29,7 @@ public class Mudkips extends JavaPlugin {
     private HashMap<String, MudkipsPlayer> mapPlayers = new HashMap<String, MudkipsPlayer>();
     //private Set<String> aliasSet
     private SoftReference<Set<AliasEntry<String,String>>> cachedAliasSet;
+    //Every one of these semi-constants may be changed during runtime without causing any error nor exception nor buggy behavior
 	private int AFK_RETURN_MSG_DURATION;
 	private String AFK_RETURN_MSG;
 	private String PLAYER_AFK_NOTIFICATION;
@@ -48,10 +49,12 @@ public class Mudkips extends JavaPlugin {
     private String ACTION_NO_RECEIVER;
     private boolean DISTANCE_CHECK_HEIGHT;
     private String WHISPER_NO_RECEIVER;
-	private String pathToProps = "mudkips.properties";
+    private String SHOUT_MSG;
+    private String SHOUT_NO_RECEIVER;
+    private int SHOUT_PROPAGATION_DISTANCE;
+    private String pathToProps = "mudkips.properties";
     @Override
 	public void onDisable() {
-		// TODO Auto-generated method stub
       saveProperties();
 	}
 	@Override
@@ -86,10 +89,13 @@ public class Mudkips extends JavaPlugin {
       WHISPER_PROPAGATION_DISTANCE = loadIntFromProperties("whisper-propagation-distance",10);
       WHISPER_MSG = myProps.getProperty("whisper-message", ChatColor.AQUA + "> %s whispers \"" + ChatColor.WHITE + "%m" + ChatColor.AQUA + "\"");
       ACTION_NO_RECEIVER = myProps.getProperty("action-no-receiver", ChatColor.YELLOW + "Notice: No one was able to observe what you did.");
-      WHISPER_NO_RECEIVER = myProps.getProperty("whisper-no-receiver", ChatColor.GRAY + "No one took notice of your susurrus.");
+      WHISPER_NO_RECEIVER = myProps.getProperty("whisper-no-receiver", ChatColor.YELLOW + "Notice: No one took notice of your susurrus.");
       DISTANCE_CHECK_HEIGHT = loadBoolFromProperties("distance-check-height",true);
       CHAT_NO_RECEIVER = myProps.getProperty("chat-no-receiver",ChatColor.YELLOW + "Notice: No one heard you.");
       ACTION_MSG = myProps.getProperty("action-message","* %s %m");
+      SHOUT_MSG = myProps.getProperty("shout-message", ChatColor.WHITE + "> %s shouts \"" + "%m" + "\"" );
+      SHOUT_NO_RECEIVER = myProps.getProperty("shout-no-receiver", ChatColor.YELLOW + "Notice: Even 'though you are shouting as loud as you are able to, no one hears you."); 
+      SHOUT_PROPAGATION_DISTANCE = loadIntFromProperties("shout-propagation-distance", 0);
       //Register Player events
       PluginManager pm = this.getServer().getPluginManager();
       MPlayerListener playerListener = new MPlayerListener(this);
@@ -213,7 +219,9 @@ public class Mudkips extends JavaPlugin {
     	 }
       } else if(rawCommand.indexOf("weather") == 0) {
     	 if(sender.isOp()) { //pSender == null || pSender.isOp()
+    	   //Just inform about the weather
            if(args.length == 0) {
+        	 //It's a player
         	 if(pSender != null) {
         	   org.bukkit.World worldPlayerIsIn = pSender.getWorld();
         	   if(worldPlayerIsIn.hasStorm()) {
@@ -221,7 +229,7 @@ public class Mudkips extends JavaPlugin {
         	   } else {
         		 pSender.sendMessage("It's shun-shine!!!!");
         	   }
-        	 } else { //If invoked from Console
+        	 } else { //If invoked from Console. Console wants to know the weather for every world
         	   java.util.List <org.bukkit.World> worlds = this.getServer().getWorlds();
         	   String [] output = null;
         	   if(worlds.size() > 1) {
@@ -250,9 +258,12 @@ public class Mudkips extends JavaPlugin {
         	   sender.sendMessage(this.concatenate(output, "\n", 0));
         	 }
            } else if(args.length >= 1) {
-        	   //How about making param an array? so we can put like /weather On thunder 2000 OR /weather 2000 thunder Off
+        	 //Changing the weather  
+        	  
+        	 //How about making param an array? so we can put like /weather On thunder 2000 OR /weather 2000 thunder Off
         	 String param = null;
         	 org.bukkit.World worldToChangeWeatherIn = null;
+        	 //Separating the world Argument from the ON/OFF/Ticks Parameter
         	 if(args.length >= 2) {
         	   worldToChangeWeatherIn = this.getServer().getWorld(args[0]);
         	   param = args[1].toLowerCase();
@@ -267,6 +278,7 @@ public class Mudkips extends JavaPlugin {
         	   param = args[0].toLowerCase();
         	 }
         	 if(worldToChangeWeatherIn != null) {
+        	   //Activate Weather
 		       if(param.equals("on") || param.equals("true") || param.equals("active") || param.equals("activated") || param.equals("yes") || param.equals("y")) {
 				 if(!worldToChangeWeatherIn.hasStorm()) {
 			       sender.sendMessage(ChatColor.YELLOW + "Notice: It's storming now.");
@@ -274,6 +286,7 @@ public class Mudkips extends JavaPlugin {
 				 }
 		    	 worldToChangeWeatherIn.setStorm(true);
 		         return true;
+		       //Deactivate Weather
 		       } else if(param.equals("off") || param.equals("false") || param.equals("0") || param.equals("unactive") || param.equals("deactivated") || param.equals("no") || param.equals("n")) {
 			     if(worldToChangeWeatherIn.hasStorm()) {
 		           sender.sendMessage(ChatColor.YELLOW + "Notice: It stopped storming now.");
@@ -281,6 +294,7 @@ public class Mudkips extends JavaPlugin {
 			     }
 		         worldToChangeWeatherIn.setStorm(false);
 		         return true;
+		       //Specifically set the weather duration 
 		       } else {
 		    	 int stormTicks = 0;
 		    	 try {
@@ -319,6 +333,17 @@ public class Mudkips extends JavaPlugin {
         	 sender.sendMessage("It seems, that Gods are incapable of whispering.");
            }
         }
+       else if(rawCommand.indexOf("shout") == 0) {
+           if(pSender != null) {
+             if(args.length > 0)
+               whisperChat(pSender, concatenate(args, " ", 0));
+              else
+               pSender.sendMessage(ChatColor.RED + "You did not shout anything.");
+            } else {
+             //Maybe instead we could make a lightning strike right before the eyes of everyone, and announce the message
+         	 sender.sendMessage("Gods dont need to shout.");
+            }
+         }
       return true;
     }
   public void saveProperties() {
@@ -340,6 +365,9 @@ public class Mudkips extends JavaPlugin {
     myProps.setProperty("distance-check-height", DISTANCE_CHECK_HEIGHT ? "true" : "false");
     myProps.setProperty("chat-no-receiver", CHAT_NO_RECEIVER);
     myProps.setProperty("action-message", ACTION_MSG);
+    myProps.setProperty("shout-message", SHOUT_MSG);
+    myProps.setProperty("shout-no-receiver", SHOUT_NO_RECEIVER);
+    myProps.setProperty("shout-propagation-distance", ""+SHOUT_PROPAGATION_DISTANCE);
 	FileOutputStream outStream = null;
 	try {
       outStream = new FileOutputStream(pathToProps,false);
@@ -545,6 +573,17 @@ public class Mudkips extends JavaPlugin {
 	if(!sendMessageAround(msg, sender.getLocation(), WHISPER_PROPAGATION_DISTANCE))
 	  sender.sendMessage(WHISPER_NO_RECEIVER.replaceAll("%s", mPlayer.getAlias()));
   }
+  public void shoutChat(Player sender, String message) {
+	MudkipsPlayer mPlayer = mapPlayers.get(sender.getName());
+	String msg = null;
+	if(mPlayer != null && sender.getDisplayName().equals(sender.getName()))
+	  msg = SHOUT_MSG.replaceAll("%s", mPlayer.getAlias()).replaceAll("%m", message);
+	else
+	  msg = SHOUT_MSG.replaceAll("%s", sender.getDisplayName()).replaceAll("%m", message);
+	
+	if(!sendMessageAround(msg, sender.getLocation(), SHOUT_PROPAGATION_DISTANCE))
+      sender.sendMessage(SHOUT_NO_RECEIVER.replaceAll("%s", mPlayer.getAlias()));
+	}
   public void privateChat(Player sender, Player receiver, String message) {
 	MudkipsPlayer mPlayerReceiver = mapPlayers.get(receiver.getName());
 	if(mPlayerReceiver != null) {
