@@ -39,8 +39,10 @@ public class Mudkips extends JavaPlugin {
     private String PRIVATE_CHAT_JOIN;
     private String PRIVATE_CHAT_LEAVE;
     private String CHAT_MSG;
+    private String ACTION_MSG;
     private int ACTION_PROPAGATION_DISTANCE;
     private int CHAT_PROPAGATION_DISTANCE;
+    private String CHAT_NO_RECEIVER;
     private int WHISPER_PROPAGATION_DISTANCE;
     private String WHISPER_MSG;
     private String ACTION_NO_RECEIVER;
@@ -54,7 +56,6 @@ public class Mudkips extends JavaPlugin {
 	}
 	@Override
 	public void onEnable() {
-		// TODO Auto-generated method stub
 	  File pluginFolder = this.getFile().getParentFile();
 	  pathToProps = pluginFolder.getPath() + "/" + "mudkips.properties";
       try {
@@ -65,7 +66,7 @@ public class Mudkips extends JavaPlugin {
       }
       WELCOME_MESSAGE = myProps.getProperty("motd", "Welcome %s");
       AFK_RETURN_MSG_DURATION = loadIntFromProperties("afk-return-message-duration",1000 * 60 * 1);
-      AFK_RETURN_MSG = myProps.getProperty("afk-return-msg", "is back");
+      AFK_RETURN_MSG = myProps.getProperty("afk-return-message", "is back");
       HELP_MSG = myProps.getProperty("help", ChatColor.WHITE + "Mudkips Plugin Commands:\n"
     		                                                 + ChatColor.BLACK + "+ " + ChatColor.YELLOW + "/afk <message>\n  " + ChatColor.AQUA + "Toggles afk status\n"
     		                                                 + ChatColor.BLACK + "+ " + ChatColor.YELLOW + "/playerlist\n  " + ChatColor.AQUA + "Prints a list of players being online\n"
@@ -74,7 +75,8 @@ public class Mudkips extends JavaPlugin {
                                                              );
       PLAYER_AFK_NOTIFICATION = myProps.getProperty("player-afk","You went afk, with message: ");
       PLAYER_BACK_NOTIFICATION = myProps.getProperty("player-back","Welcome back.");
-//      AFK_CONCAT = myProps.getProperty("afk-concat","is");
+      //Uh, oh, someone with %a in his Name could fiddle in a message duplication
+      //TODO: Write a method to escape %s %a %m stuff with 1 call
       AFK_MESSAGE = myProps.getProperty("afk-message", ChatColor.YELLOW + "%s is %a (afk)");
       PRIVATE_CHAT_JOIN = myProps.getProperty("private-chat-join", ChatColor.YELLOW +  "Notice: You are in private chat with \"" + ChatColor.WHITE + "%s" + ChatColor.YELLOW + "\"");
       PRIVATE_CHAT_LEAVE = myProps.getProperty("private-chat-leave", ChatColor.YELLOW + "Notice: You left private chat with \"" + ChatColor.WHITE + "%s" + ChatColor.YELLOW + "\"");
@@ -86,6 +88,8 @@ public class Mudkips extends JavaPlugin {
       ACTION_NO_RECEIVER = myProps.getProperty("action-no-receiver", ChatColor.YELLOW + "Notice: No one was able to observe what you did.");
       WHISPER_NO_RECEIVER = myProps.getProperty("whisper-no-receiver", ChatColor.GRAY + "No one took notice of your susurrus.");
       DISTANCE_CHECK_HEIGHT = loadBoolFromProperties("distance-check-height",true);
+      CHAT_NO_RECEIVER = myProps.getProperty("chat-no-receiver",ChatColor.YELLOW + "Notice: No one heard you.");
+      ACTION_MSG = myProps.getProperty("action-message","* %s %m");
       //Register Player events
       PluginManager pm = this.getServer().getPluginManager();
       MPlayerListener playerListener = new MPlayerListener(this);
@@ -158,7 +162,7 @@ public class Mudkips extends JavaPlugin {
             if(args.length > 0)
               rpChat(pSender, concatenate(args, " ", 0));
             else
-              pSender.sendMessage(ChatColor.RED + "You did not specifie an RP action.");
+              pSender.sendMessage(ChatColor.RED + "You did not specify an RP action.");
           }
       }
         else if(rawCommand.indexOf("msg") == 0) {
@@ -305,13 +309,23 @@ public class Mudkips extends JavaPlugin {
     	   sender.sendMessage(ChatColor.YELLOW + "Notice: You are not authorized.");
     	 }
       }
+       else if(rawCommand.indexOf("w") == 0) {
+          if(pSender != null) {
+            if(args.length > 0)
+              whisperChat(pSender, concatenate(args, " ", 0));
+             else
+              pSender.sendMessage(ChatColor.RED + "You did not whisper anything.");
+           } else {
+        	 sender.sendMessage("It seems, that Gods are incapable of whispering.");
+           }
+        }
       return true;
     }
   public void saveProperties() {
 	//ToDO: Fill this here out!
 	myProps.setProperty("motd", WELCOME_MESSAGE);
 	myProps.setProperty("afk-return-message-duration", AFK_RETURN_MSG_DURATION + "");
-	myProps.setProperty("afk-return-msg", AFK_RETURN_MSG);
+	myProps.setProperty("afk-return-message", AFK_RETURN_MSG);
 	myProps.setProperty("help", HELP_MSG);
 	myProps.setProperty("player-afk", PLAYER_AFK_NOTIFICATION);
 	myProps.setProperty("player-back", PLAYER_BACK_NOTIFICATION);
@@ -324,6 +338,8 @@ public class Mudkips extends JavaPlugin {
     myProps.setProperty("whisper-propagation-distance", ""+WHISPER_PROPAGATION_DISTANCE);
     myProps.setProperty("action-no-receiver", ACTION_NO_RECEIVER);
     myProps.setProperty("distance-check-height", DISTANCE_CHECK_HEIGHT ? "true" : "false");
+    myProps.setProperty("chat-no-receiver", CHAT_NO_RECEIVER);
+    myProps.setProperty("action-message", ACTION_MSG);
 	FileOutputStream outStream = null;
 	try {
       outStream = new FileOutputStream(pathToProps,false);
@@ -413,8 +429,9 @@ public class Mudkips extends JavaPlugin {
 	   }
 	 }
   if(!e.isCancelled()) {
-	this.getServer().broadcastMessage(CHAT_MSG.replaceAll("%s",p.getDisplayName()).replaceAll("%m",e.getMessage()));
-	e.setCancelled(true);
+	if(!sendMessageAround(CHAT_MSG.replaceAll("%s",p.getDisplayName()).replaceAll("%m",e.getMessage()), p.getLocation(), CHAT_PROPAGATION_DISTANCE))
+	  p.sendMessage(this.CHAT_NO_RECEIVER.replaceAll("%s",p.getDisplayName()));
+	  e.setCancelled(true);
     }
   }
   public String concatenate(String[] concat, String delim, int offset) {
@@ -510,9 +527,9 @@ public class Mudkips extends JavaPlugin {
 	MudkipsPlayer mP = mapPlayers.get(p.getName());
 	String msg = null;
 	if(mP != null && p.getDisplayName().equals(p.getName()))
-	  msg = "* " + mP.getAlias() + " " + action;
+	  msg = ACTION_MSG.replaceAll("%s",mP.getAlias()).replaceAll("%m",action);
 	else
-	  msg = "* " + p.getDisplayName() + " " + action;
+	  msg = ACTION_MSG.replaceAll("%s",p.getDisplayName()).replaceAll("%m",action);
 	if(!sendMessageAround(msg, p.getLocation(), ACTION_PROPAGATION_DISTANCE))
 	  p.sendMessage(ACTION_NO_RECEIVER.replaceAll("%s", mP.getAlias()));
   }
