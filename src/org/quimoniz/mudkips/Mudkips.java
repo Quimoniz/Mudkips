@@ -10,6 +10,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -42,6 +43,9 @@ public class Mudkips extends JavaPlugin {
     private int CHAT_PROPAGATION_DISTANCE;
     private int WHISPER_PROPAGATION_DISTANCE;
     private String WHISPER_MSG;
+    private String ACTION_NO_RECEIVER;
+    private boolean DISTANCE_CHECK_HEIGHT;
+    private String WHISPER_NO_RECEIVER;
 	private String pathToProps = "mudkips.properties";
     @Override
 	public void onDisable() {
@@ -79,6 +83,9 @@ public class Mudkips extends JavaPlugin {
       CHAT_PROPAGATION_DISTANCE = loadIntFromProperties("action-propagation-distance",300);
       WHISPER_PROPAGATION_DISTANCE = loadIntFromProperties("whisper-propagation-distance",10);
       WHISPER_MSG = myProps.getProperty("whisper-message", ChatColor.AQUA + "> %s whispers \"" + ChatColor.WHITE + "%m" + ChatColor.AQUA + "\"");
+      ACTION_NO_RECEIVER = myProps.getProperty("action-no-receiver", ChatColor.YELLOW + "Notice: No one was able to observe what you did.");
+      WHISPER_NO_RECEIVER = myProps.getProperty("whisper-no-receiver", ChatColor.GRAY + "No one took notice of your susurrus.");
+      DISTANCE_CHECK_HEIGHT = loadBoolFromProperties("distance-check-height",true);
       //Register Player events
       PluginManager pm = this.getServer().getPluginManager();
       MPlayerListener playerListener = new MPlayerListener(this);
@@ -96,6 +103,17 @@ public class Mudkips extends JavaPlugin {
 	  	getServer().getLogger().log(Level.WARNING,"Couldn't parse property \""+propertyName+"\" in " + pathToProps + " to int.");
 	  }
 	  return parsedInt;
+	}
+	public boolean loadBoolFromProperties(String propertyName, boolean defaultValue) {
+      String val = myProps.getProperty(propertyName, defaultValue?"true":"false").toLowerCase();
+      if(val.equals("on") || val.equals("true") || val.equals("1") || val.equals("active") || val.equals("activated") || val.equals("yes") || val.equals("y")) {
+        return true;
+      } else if(val.equals("off") || val.equals("false") || val.equals("0") || val.equals("unactive") || val.equals("inactive") || val.equals("deactivated") || val.equals("no") || val.equals("n")) {
+    	return false;
+	  } else {
+		getServer().getLogger().log(Level.WARNING,"Couldn't parse property \""+propertyName+"\" in " + pathToProps + " to boolean.");
+		return defaultValue;
+	  }
 	}
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
       //firstof casting sender to a Player ...
@@ -228,6 +246,7 @@ public class Mudkips extends JavaPlugin {
         	   sender.sendMessage(this.concatenate(output, "\n", 0));
         	 }
            } else if(args.length >= 1) {
+        	   //How about making param an array? so we can put like /weather On thunder 2000 OR /weather 2000 thunder Off
         	 String param = null;
         	 org.bukkit.World worldToChangeWeatherIn = null;
         	 if(args.length >= 2) {
@@ -303,6 +322,8 @@ public class Mudkips extends JavaPlugin {
     myProps.setProperty("action-propagation-distance", ""+ACTION_PROPAGATION_DISTANCE);
     myProps.setProperty("chat-propagation-distance", ""+CHAT_PROPAGATION_DISTANCE);
     myProps.setProperty("whisper-propagation-distance", ""+WHISPER_PROPAGATION_DISTANCE);
+    myProps.setProperty("action-no-receiver", ACTION_NO_RECEIVER);
+    myProps.setProperty("distance-check-height", DISTANCE_CHECK_HEIGHT ? "true" : "false");
 	FileOutputStream outStream = null;
 	try {
       outStream = new FileOutputStream(pathToProps,false);
@@ -367,7 +388,7 @@ public class Mudkips extends JavaPlugin {
 	Iterator<AliasEntry<String,String>> iter = aliasSet.iterator();
 	String[] regexStart = new String[]{"^","( |,|:)?.*"};
 	String[] regexEnd = new String[]{".*( |,|:)?","$"};
-	//Checking which player have been mentioned by some chatter, at the begin or end of a message
+	//Checking which player has been mentioned by some chatter, at the begin or end of a message
 	while(iter.hasNext()) {
 	  AliasEntry<String, String> alias=iter.next();
       String msgLowerCase = msg.toLowerCase();
@@ -406,6 +427,30 @@ public class Mudkips extends JavaPlugin {
 	  i ++;
 	}
 	return concatenateBuf.toString();
+  }
+  public double calcDistance(Location locA, Location locB, boolean checkHeight) {
+	if(checkHeight)
+	  return Math.sqrt(Math.pow(Math.sqrt(Math.pow(locA.getX()-locB.getX(),2) + Math.pow(locA.getY()-locB.getY(),2)),2) + Math.pow(locA.getZ()-locB.getY(),2));
+	else
+		return Math.sqrt(Math.pow(locA.getX()-locB.getX(),2) + Math.pow(locA.getZ()-locB.getZ(),2));
+  }
+  public boolean sendMessageAround(String message, Location loc, double distance) {
+	int i = 0;
+	if(distance <= 0) {
+	  this.getServer().broadcastMessage(message);
+	  i = this.getServer().getOnlinePlayers().length;
+	} else {
+	  for(Player pReceiver : this.getServer().getOnlinePlayers()) {
+	    if(calcDistance(loc, pReceiver.getLocation(), DISTANCE_CHECK_HEIGHT) < distance) {
+	  	  pReceiver.sendMessage(message);
+	      i ++;
+	    }
+	  }
+	}
+	if(i == 0)
+	  return false;
+	else
+	  return true;
   }
   public String playerListing() {
   	Player[] players = this.getServer().getOnlinePlayers();
@@ -451,11 +496,15 @@ public class Mudkips extends JavaPlugin {
 	return mapPlayers.get(playerName);
   }
   public void sendMotd(Player p) {
-	MudkipsPlayer mPlayer = getMudkipsPlayer(p.getName());
-	if(mPlayer == null)
-	  p.sendMessage(WELCOME_MESSAGE.replaceAll("%s", p.getDisplayName()));
-	else
-	  p.sendMessage(WELCOME_MESSAGE.replaceAll("%s", mPlayer.getAlias()));
+	try {
+	  MudkipsPlayer mPlayer = getMudkipsPlayer(p.getName());
+	  if(mPlayer == null)
+	    p.sendMessage(WELCOME_MESSAGE.replaceAll("%s", p.getDisplayName()));
+	  else
+	    p.sendMessage(WELCOME_MESSAGE.replaceAll("%s", mPlayer.getAlias()));
+	} catch(NullPointerException exc) {
+	  this.getServer().getLogger().log(Level.WARNING, "NullPointerException while sending MOTD!");
+	}
   }
   public void rpChat(Player p, String action) {
 	MudkipsPlayer mP = mapPlayers.get(p.getName());
@@ -464,14 +513,20 @@ public class Mudkips extends JavaPlugin {
 	  msg = "* " + mP.getAlias() + " " + action;
 	else
 	  msg = "* " + p.getDisplayName() + " " + action;
-	int[] locActor = {p.getLocation().getBlockX(),p.getLocation().getBlockY(),p.getLocation().getBlockZ()};
-	for(Player pReceiver : this.getServer().getOnlinePlayers()) {
-      int[] locReceiver = {pReceiver.getLocation().getBlockX(),pReceiver.getLocation().getBlockY(),pReceiver.getLocation().getBlockZ()};
-      int distance = (int) Math.sqrt(Math.pow(Math.sqrt(Math.pow(locActor[0]-locReceiver[0],2) + Math.pow(locActor[2]-locReceiver[2],2)),2) + Math.pow(locActor[1]-locReceiver[1],2));
-      if(distance < ACTION_PROPAGATION_DISTANCE)
-    	pReceiver.sendMessage(msg);
-	}
-//	this.getServer().broadcastMessage(msg);
+	if(!sendMessageAround(msg, p.getLocation(), ACTION_PROPAGATION_DISTANCE))
+	  p.sendMessage(ACTION_NO_RECEIVER.replaceAll("%s", mP.getAlias()));
+  }
+  //Copy and Pasted the Code from rpChat, bad habbit :-(
+  public void whisperChat(Player sender, String message) {
+    MudkipsPlayer mPlayer = mapPlayers.get(sender.getName());
+	String msg = null;
+	if(mPlayer != null && sender.getDisplayName().equals(sender.getName()))
+	  msg = WHISPER_MSG.replaceAll("%s", mPlayer.getAlias()).replaceAll("%m", message);
+	else
+	  msg = WHISPER_MSG.replaceAll("%s", sender.getDisplayName()).replaceAll("%m", message);
+
+	if(!sendMessageAround(msg, sender.getLocation(), WHISPER_PROPAGATION_DISTANCE))
+	  sender.sendMessage(WHISPER_NO_RECEIVER.replaceAll("%s", mPlayer.getAlias()));
   }
   public void privateChat(Player sender, Player receiver, String message) {
 	MudkipsPlayer mPlayerReceiver = mapPlayers.get(receiver.getName());
