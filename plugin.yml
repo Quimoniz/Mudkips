@@ -34,4 +34,7 @@ commands:
     usage: /weather [world] [<Ticks>|On|Off|True|False] [thunder [<Ticks>|On|Off|True|False]]
   shout:
     description: Shout something to everyone on the server
-    usage: /shout <Message> 
+    usage: /shout <Message>
+  w:
+    description: Whisper something
+    usage: /w <Message> 

@@ -86,7 +86,7 @@ public class Mudkips extends JavaPlugin {
       PRIVATE_CHAT_LEAVE = myProps.getProperty("private-chat-leave", ChatColor.YELLOW + "Notice: You left private chat with \"" + ChatColor.WHITE + "%s" + ChatColor.YELLOW + "\"");
       CHAT_MSG = myProps.getProperty("chat-message", ChatColor.WHITE + "> %s says \"" + "%m" + "\"" );
       ACTION_PROPAGATION_DISTANCE = loadIntFromProperties("action-propagation-distance",70);
-      CHAT_PROPAGATION_DISTANCE = loadIntFromProperties("action-propagation-distance",300);
+      CHAT_PROPAGATION_DISTANCE = loadIntFromProperties("chat-propagation-distance",300);
       WHISPER_PROPAGATION_DISTANCE = loadIntFromProperties("whisper-propagation-distance",10);
       WHISPER_MSG = myProps.getProperty("whisper-message", ChatColor.AQUA + "> %s whispers \"" + ChatColor.WHITE + "%m" + ChatColor.AQUA + "\"");
       ACTION_NO_RECEIVER = myProps.getProperty("action-no-receiver", ChatColor.YELLOW + "Notice: No one was able to observe what you did.");
@@ -277,7 +277,7 @@ public class Mudkips extends JavaPlugin {
         	   }
         	   if(param.equalsIgnoreCase("thunder")) {
         	     paramThunder = param = args[2].toLowerCase();
-        	     param = param = args[0].toLowerCase();
+        	     param = args[0].toLowerCase();
         	   } else if(args.length >= 4) {
         		 if(args[2].equalsIgnoreCase("thunder"))
         		   paramThunder = args[3].toLowerCase();
@@ -316,7 +316,7 @@ public class Mudkips extends JavaPlugin {
        else if(rawCommand.indexOf("shout") == 0) {
            if(pSender != null) {
              if(args.length > 0)
-               whisperChat(pSender, concatenate(args, " ", 0));
+               shoutChat(pSender, concatenate(args, " ", 0));
               else
                pSender.sendMessage(ChatColor.RED + "You did not shout anything.");
             } else {
@@ -455,10 +455,13 @@ public class Mudkips extends JavaPlugin {
 	return concatenateBuf.toString();
   }
   public double calcDistance(Location locA, Location locB, boolean checkHeight) {
-	if(checkHeight)
-	  return Math.sqrt(Math.pow(Math.sqrt(Math.pow(locA.getX()-locB.getX(),2) + Math.pow(locA.getY()-locB.getY(),2)),2) + Math.pow(locA.getZ()-locB.getY(),2));
-	else
-		return Math.sqrt(Math.pow(locA.getX()-locB.getX(),2) + Math.pow(locA.getZ()-locB.getZ(),2));
+	double distance = 0;
+	double deltaX = locA.getBlockX()-locB.getBlockX(), deltaY = locA.getBlockY()-locB.getBlockY(), deltaZ = locA.getBlockZ()-locB.getBlockZ();
+	if(checkHeight) // Euclidean distance
+	  distance = Math.sqrt(Math.pow(deltaX,2) + Math.pow(deltaY,2) + Math.pow(deltaZ,2));
+	else // Pythagorean theorem
+		distance = Math.sqrt(deltaX*deltaX + deltaZ*deltaZ);
+	return distance;
   }
   public boolean sendMessageAround(String message, Location loc, double distance) {
 	int i = 0;
