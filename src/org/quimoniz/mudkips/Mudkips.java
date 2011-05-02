@@ -104,6 +104,12 @@ public class Mudkips extends JavaPlugin {
       pm.registerEvent(Event.Type.PLAYER_LOGIN, playerListener, Event.Priority.Normal, this);
       pm.registerEvent(Event.Type.PLAYER_QUIT, playerListener, Event.Priority.Normal, this);
       
+      //parameters: first the Plugin.
+      //            second the task
+      //            third the delay until the task is run first
+      //            fourth the delay between each following invocation
+      this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new TimeCheckerTask(this), 20, 100);
+      
       saveProperties();
 	}
 	public int loadIntFromProperties(String propertyName, int defaultValue) {
@@ -303,7 +309,7 @@ public class Mudkips extends JavaPlugin {
     	   sender.sendMessage(ChatColor.YELLOW + "Notice: You are not authorized.");
     	 }
       }
-       else if(rawCommand.indexOf("w") == 0) {
+       else if(rawCommand.equalsIgnoreCase("w")) {
           if(pSender != null) {
             if(args.length > 0)
               whisperChat(pSender, concatenate(args, " ", 0));
@@ -313,7 +319,7 @@ public class Mudkips extends JavaPlugin {
         	 sender.sendMessage("It seems, that Gods are incapable of whispering.");
            }
         }
-       else if(rawCommand.indexOf("shout") == 0) {
+       else if(rawCommand.indexOf("shout") == 0 || rawCommand.equalsIgnoreCase("s")) {
            if(pSender != null) {
              if(args.length > 0)
                shoutChat(pSender, concatenate(args, " ", 0));

@@ -35,6 +35,9 @@ commands:
   shout:
     description: Shout something to everyone on the server
     usage: /shout <Message>
+  s:
+    description: Shortcut for /shout
+    usage: /s <Message>
   w:
     description: Whisper something
-    usage: /w <Message> 
+    usage: /w <Message>
