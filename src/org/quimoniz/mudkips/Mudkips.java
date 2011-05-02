@@ -361,6 +361,8 @@ public class Mudkips extends JavaPlugin {
     	 duration /= 100;
     	 if(duration < 0.02)
     	   buf.append("Just logged in");
+    	 else if(duration >= 0.45 && duration <= 0.55)
+    	   buf.append("Logged in half a day ago.\n");
     	 else
     	   buf.append("Logged in " + duration + " days ago.\n");
     	 sender.sendMessage(buf.toString());
@@ -478,7 +480,7 @@ public class Mudkips extends JavaPlugin {
 	   }
 	 }
   if(!e.isCancelled()) {
-	if(!sendMessageAround(CHAT_MSG.replaceAll("%s",p.getDisplayName()).replaceAll("%m",e.getMessage()), p.getLocation(), CHAT_PROPAGATION_DISTANCE))
+	if(sendMessageAround(CHAT_MSG.replaceAll("%s",p.getDisplayName()).replaceAll("%m",e.getMessage()), p.getLocation(), CHAT_PROPAGATION_DISTANCE) <= 1)
 	  p.sendMessage(this.CHAT_NO_RECEIVER.replaceAll("%s",p.getDisplayName()));
 	  e.setCancelled(true);
     }
@@ -503,23 +505,22 @@ public class Mudkips extends JavaPlugin {
 		distance = Math.sqrt(deltaX*deltaX + deltaZ*deltaZ);
 	return distance;
   }
-  public boolean sendMessageAround(String message, Location loc, double distance) {
+  public int sendMessageAround(String message, Location loc, double distance) {
 	int i = 0;
-	if(distance <= 0) {
-	  this.getServer().broadcastMessage(message);
-	  i = this.getServer().getOnlinePlayers().length;
+    if(distance <= 0) {
+	  for(Player pReceiver : loc.getWorld().getPlayers()) {
+	    pReceiver.sendMessage(message);
+		i ++;
+	  }  
 	} else {
-	  for(Player pReceiver : this.getServer().getOnlinePlayers()) {
+	  for(Player pReceiver : loc.getWorld().getPlayers()) {
 	    if(calcDistance(loc, pReceiver.getLocation(), DISTANCE_CHECK_HEIGHT) < distance) {
 	  	  pReceiver.sendMessage(message);
 	      i ++;
 	    }
 	  }
 	}
-	if(i == 0)
-	  return false;
-	else
-	  return true;
+    return i;
   }
   public String playerListing() {
   	Player[] players = this.getServer().getOnlinePlayers();
@@ -581,7 +582,7 @@ public class Mudkips extends JavaPlugin {
 	  msg = ACTION_MSG.replaceAll("%s",mP.getAlias()).replaceAll("%m",action);
 	else
 	  msg = ACTION_MSG.replaceAll("%s",p.getDisplayName()).replaceAll("%m",action);
-	if(!sendMessageAround(msg, p.getLocation(), ACTION_PROPAGATION_DISTANCE))
+	if(sendMessageAround(msg, p.getLocation(), ACTION_PROPAGATION_DISTANCE) <= 1)
 	  p.sendMessage(ACTION_NO_RECEIVER.replaceAll("%s", mP.getAlias()));
   }
   //Copy and Pasted the Code from rpChat, bad habbit :-(
@@ -593,7 +594,7 @@ public class Mudkips extends JavaPlugin {
 	else
 	  msg = WHISPER_MSG.replaceAll("%s", sender.getDisplayName()).replaceAll("%m", message);
 
-	if(!sendMessageAround(msg, sender.getLocation(), WHISPER_PROPAGATION_DISTANCE))
+	if(sendMessageAround(msg, sender.getLocation(), WHISPER_PROPAGATION_DISTANCE) <= 1)
 	  sender.sendMessage(WHISPER_NO_RECEIVER.replaceAll("%s", mPlayer.getAlias()));
   }
   public void shoutChat(Player sender, String message) {
@@ -604,7 +605,7 @@ public class Mudkips extends JavaPlugin {
 	else
 	  msg = SHOUT_MSG.replaceAll("%s", sender.getDisplayName()).replaceAll("%m", message);
 	
-	if(!sendMessageAround(msg, sender.getLocation(), SHOUT_PROPAGATION_DISTANCE))
+	if(sendMessageAround(msg, sender.getLocation(), SHOUT_PROPAGATION_DISTANCE) <= 1)
       sender.sendMessage(SHOUT_NO_RECEIVER.replaceAll("%s", mPlayer.getAlias()));
 	}
   public void privateChat(Player sender, Player receiver, String message) {
