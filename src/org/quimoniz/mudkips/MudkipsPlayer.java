@@ -11,6 +11,8 @@ public class MudkipsPlayer {
   private boolean afk;
   private String afkMessage;
   private long lastAfkToggle = 0;
+  private long initRealTime = 0;
+  private long initTime = 0;
   private final String DEFAULT_AFK_MSG = "is afk";
   private Mudkips mudkipsMain;
   private String chatPartner = null;
@@ -20,6 +22,8 @@ public class MudkipsPlayer {
 	pObject = p;
 	serverObject = s;
 	this.mudkipsMain = mudkipsMain;
+	initRealTime = System.currentTimeMillis();
+	initTime = p.getWorld().getFullTime();
 	buildAlias();
   }
   public Player getPlayer() {
@@ -77,6 +81,12 @@ public class MudkipsPlayer {
  }
  public String getPrivateChatPartner() {
    return chatPartner;
+ }
+ public long getInitTime() {
+   return initTime;
+ }
+ public long getInitRealTime() {
+   return initRealTime;
  }
  public boolean isAfk() {
    return afk;

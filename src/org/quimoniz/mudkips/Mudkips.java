@@ -330,7 +330,41 @@ public class Mudkips extends JavaPlugin {
              //even better, why not using Server.makeSound ( "weather.thunder") somethin?
          	 sender.sendMessage("Gods dont need to shout.");
             }
-         }
+        }
+       else if(rawCommand.equals("info")) {
+    	 String playerName = null;
+    	 if(args.length < 1) {
+    	   if(pSender != null)
+    		 playerName = pSender.getName();
+    	   else {
+    		 sender.sendMessage("Cant display any information, parameter required.");
+    		 return false;
+    	   }
+    	 } else {
+    	   playerName = args[0];
+    	 }
+    	 MudkipsPlayer mPlayer = mapPlayers.get(playerName);
+    	 StringBuilder buf = new StringBuilder();
+    	 //mPlayer.afkMessage()
+    	 buf.append(mPlayer.getName() + ": \n");
+    	 if(mPlayer.isAfk())
+    	   buf.append(this.afkNotification(mPlayer) + "\n" + ChatColor.WHITE);
+    	 if(pSender != null && !pSender.getName().equals(mPlayer.getName())) {
+    	   if(calcDistance(pSender.getLocation(), mPlayer.getPlayer().getLocation(), true) < CHAT_PROPAGATION_DISTANCE)
+    		 buf.append("Is somewhere around you\n");
+    	   else
+    		 buf.append("Is far away\n");
+    	 }
+    	 double duration = (mPlayer.getPlayer().getWorld().getFullTime()-mPlayer.getInitTime())/24000.00;
+    	 duration *= 100;
+    	 duration = (int) duration;
+    	 duration /= 100;
+    	 if(duration < 0.02)
+    	   buf.append("Just logged in");
+    	 else
+    	   buf.append("Logged in " + duration + " days ago.\n");
+    	 sender.sendMessage(buf.toString());
+       }
       return true;
     }
   public void saveProperties() {
@@ -518,13 +552,12 @@ public class Mudkips extends JavaPlugin {
   }
   public void playerMentioned(MudkipsPlayer mP, Player byPlayer) {
 	if(mP.isAfk()) {
-      afkNotification(mP, byPlayer);
-	  
+	  byPlayer.sendMessage(afkNotification(mP));
 	}
   }
-  public void afkNotification(MudkipsPlayer playerAfk, Player receiver) {
+  public String afkNotification(MudkipsPlayer playerAfk) {
 //	if(playerAfk.isAfk())
-	  receiver.sendMessage(AFK_MESSAGE.replaceAll("%s", playerAfk.getName()).replaceAll("%a", playerAfk.afkMessage()));
+	 return AFK_MESSAGE.replaceAll("%s", playerAfk.getName()).replaceAll("%a", playerAfk.afkMessage());
 	  
   }
   public MudkipsPlayer getMudkipsPlayer(String playerName) {
@@ -578,7 +611,7 @@ public class Mudkips extends JavaPlugin {
 	MudkipsPlayer mPlayerReceiver = mapPlayers.get(receiver.getName());
 	if(mPlayerReceiver != null) {
 	  if(mPlayerReceiver.isAfk())
-	    afkNotification(mPlayerReceiver, sender);
+		  sender.sendMessage(afkNotification(mPlayerReceiver));
 	}
 	boolean makeInvisible = message.startsWith("-i");  
 	if(!makeInvisible)

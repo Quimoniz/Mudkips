@@ -41,3 +41,6 @@ commands:
   w:
     description: Whisper something
     usage: /w <Message>
+  info:
+    description: Receive information about a player
+    usage: /info <Player>
