@@ -26,7 +26,8 @@ import java.util.Iterator;
 import java.lang.ref.SoftReference;
 
 public class Mudkips extends JavaPlugin {
-    private Properties myProps = null;
+//    private Properties myProps = null;
+    private PropertyManager myProps;
     private HashMap<String, MudkipsPlayer> mapPlayers = new HashMap<String, MudkipsPlayer>();
     //private Set<String> aliasSet
     private SoftReference<Set<AliasEntry<String,String>>> cachedAliasSet;
@@ -62,12 +63,7 @@ public class Mudkips extends JavaPlugin {
 	public void onEnable() {
 	  File pluginFolder = this.getFile().getParentFile();
 	  pathToProps = pluginFolder.getPath() + "/" + "mudkips.properties";
-      try {
-    	  myProps = new Properties();
-    	  myProps.load(new FileInputStream(pathToProps));
-      } catch(IOException exc) {
-    	  this.getServer().getLogger().log(Level.SEVERE, "Mudkips couldn't load Properties file to be located at \"" + pathToProps + "\".");
-      }
+      myProps = new PropertyManager(pathToProps, this.getServer());
       WELCOME_MESSAGE = myProps.getProperty("motd", "Welcome %s");
       AFK_RETURN_MSG_DURATION = loadIntFromProperties("afk-return-message-duration",1000 * 60 * 1);
       AFK_RETURN_MSG = myProps.getProperty("afk-return-message", "is back");
@@ -371,47 +367,7 @@ public class Mudkips extends JavaPlugin {
     }
   public void saveProperties() {
 	//ToDO: Fill this here out!
-	myProps.setProperty("motd", WELCOME_MESSAGE);
-	myProps.setProperty("afk-return-message-duration", AFK_RETURN_MSG_DURATION + "");
-	myProps.setProperty("afk-return-message", AFK_RETURN_MSG);
-	myProps.setProperty("help", HELP_MSG);
-	myProps.setProperty("player-afk", PLAYER_AFK_NOTIFICATION);
-	myProps.setProperty("player-back", PLAYER_BACK_NOTIFICATION);
-	myProps.setProperty("afk-message", AFK_MESSAGE);
-	myProps.setProperty("private-chat-join", PRIVATE_CHAT_JOIN);
-	myProps.setProperty("private-chat-leave", PRIVATE_CHAT_LEAVE);
-	myProps.setProperty("chat-message", CHAT_MSG);
-    myProps.setProperty("action-propagation-distance", ""+ACTION_PROPAGATION_DISTANCE);
-    myProps.setProperty("chat-propagation-distance", ""+CHAT_PROPAGATION_DISTANCE);
-    myProps.setProperty("whisper-propagation-distance", ""+WHISPER_PROPAGATION_DISTANCE);
-    myProps.setProperty("action-no-receiver", ACTION_NO_RECEIVER);
-    myProps.setProperty("distance-check-height", DISTANCE_CHECK_HEIGHT ? "true" : "false");
-    myProps.setProperty("chat-no-receiver", CHAT_NO_RECEIVER);
-    myProps.setProperty("action-message", ACTION_MSG);
-    myProps.setProperty("shout-message", SHOUT_MSG);
-    myProps.setProperty("shout-no-receiver", SHOUT_NO_RECEIVER);
-    myProps.setProperty("shout-propagation-distance", ""+SHOUT_PROPAGATION_DISTANCE);
-	FileOutputStream outStream = null;
-	try {
-      outStream = new FileOutputStream(pathToProps,false);
-	} catch(IOException exc) {
-	  getServer().getLogger().log(Level.WARNING,"Failed to create temporary Properties file for saving Properties (" + pathToProps + "): " + exc.getMessage());
-	  return;
-	}
-	if(outStream != null) {
-	  try {
-	    myProps.store(outStream, "");
-	  } catch(IOException exc) {
-	    getServer().getLogger().log(Level.WARNING,"Failed to write properties to temporary Properties File (" + pathToProps + "): " + exc.getMessage());
-	    return;
-	  }
-	}
-	try {
-	  outStream.close();
-	} catch(IOException exc) {
-      getServer().getLogger().log(Level.WARNING,"Failed to close FileOutputStream (" + pathToProps + "): " + exc.getMessage());
-	  return;
-	}
+	myProps.save();
   }
   public void playerJoin(Player p) {
 	this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new DelayedLoginEvent(this, p), 1);
