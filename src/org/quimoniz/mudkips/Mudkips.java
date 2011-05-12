@@ -271,7 +271,21 @@ public class Mudkips extends JavaPlugin {
         	 if(args.length >= 2) {
         	   param = args[1].toLowerCase();
         	   if(! param.equalsIgnoreCase("thunder")) {
-        	     worldToChangeWeatherIn = this.getServer().getWorld(args[0]);
+        	     if(args[0].equalsIgnoreCase("thunder")) {
+              	   if(pSender != null) {
+              	     worldToChangeWeatherIn = pSender.getWorld();
+              	   } else {
+              		 java.util.List <org.bukkit.World> listOfWorlds = this.getServer().getWorlds();
+              		 if(listOfWorlds.size() == 1)
+              	       worldToChangeWeatherIn = listOfWorlds.get(0);
+              	   }
+              	   if(worldToChangeWeatherIn != null)
+              	     setThunder(worldToChangeWeatherIn, args[1], sender);
+              	   else
+              		 sender.sendMessage(ChatColor.RED + "Could not associate a World!"); 
+        	     } else {
+        	       worldToChangeWeatherIn = this.getServer().getWorld(args[0]);
+        	     }
         	   } else {
           		 java.util.List <org.bukkit.World> listOfWorlds = this.getServer().getWorlds();
         		 if(listOfWorlds.size() == 1)
@@ -624,8 +638,8 @@ public class Mudkips extends JavaPlugin {
 	  if(!worldToChangeWeatherIn.hasStorm()) {
 	    sender.sendMessage(ChatColor.YELLOW + "Notice: It's storming now.");
    	    this.getServer().getLogger().log(Level.INFO, "Storm activated" + (pSender!=null?(" by " + pSender.getName()):" from Console"));
+     	worldToChangeWeatherIn.setStorm(true);
 	  }
-   	  worldToChangeWeatherIn.setStorm(true);
    	  if(paramThunder != null) {
    		 setThunder(worldToChangeWeatherIn, param, sender);
    	   }
@@ -635,8 +649,8 @@ public class Mudkips extends JavaPlugin {
 	 if(worldToChangeWeatherIn.hasStorm()) {
        sender.sendMessage(ChatColor.YELLOW + "Notice: It stopped storming now.");
        this.getServer().getLogger().log(Level.INFO, "Storm deactivated" + (pSender!=null?(" by " + pSender.getName()):" from Console"));
-	  }
-      worldToChangeWeatherIn.setStorm(false);
+       worldToChangeWeatherIn.setStorm(false);
+	 }
    	  if(paramThunder != null) {
         setThunder(worldToChangeWeatherIn, param, sender);
       }
@@ -674,14 +688,14 @@ public class Mudkips extends JavaPlugin {
 	  if(!worldToSetThunderIn.hasStorm()) {
 	    sender.sendMessage(ChatColor.YELLOW + "Notice: It's thundering now.");
 	    this.getServer().getLogger().log(Level.INFO, "Thunder activated" + (pSender!=null?(" by " + pSender.getName()):" from Console"));
+		worldToSetThunderIn.setThundering(true);
 	  }
-	  worldToSetThunderIn.setThundering(true);
 	} else if(param.equals("off") || param.equals("false") || param.equals("0") || param.equals("unactive") || param.equals("deactivated") || param.equals("no") || param.equals("n")) {
       if(worldToSetThunderIn.isThundering()) {
 		sender.sendMessage(ChatColor.YELLOW + "Notice: It stopped Thundering now.");
 		this.getServer().getLogger().log(Level.INFO, "Thundering deactivated" + (pSender!=null?(" by " + pSender.getName()):" from Console"));
-	  }
-      worldToSetThunderIn.setThundering(false);
+		worldToSetThunderIn.setThundering(false);
+      }
    } else {
 	 int thunderTicks = 0;
    	 try {
