@@ -190,7 +190,7 @@ public class Mudkips extends JavaPlugin {
     	       Player pReceiver = matchPlayer(args[0]);
     	       if(pReceiver != null) {
     	         mP.setPrivateChatPartner(pReceiver.getName());
-    	         pSender.sendMessage(PRIVATE_CHAT_JOIN.replaceAll("%s", pReceiver.getName()));
+    	         pSender.sendMessage(replaceAll(PRIVATE_CHAT_JOIN,'s', pReceiver.getName()));
     	         if(args.length >= 2)
     	           privateChat(pSender, pReceiver, concatenate(args, " ", 1));
     	       } else {
@@ -212,7 +212,7 @@ public class Mudkips extends JavaPlugin {
     		   if(mP.inPrivateChat()) {
     			 String chatPartner = mP.getPrivateChatPartner();
     			 if(chatPartner != null)
-      	           pSender.sendMessage(PRIVATE_CHAT_LEAVE.replaceAll("%s", chatPartner));
+      	           pSender.sendMessage(replaceAll(PRIVATE_CHAT_LEAVE,'s', chatPartner));
     		     mP.setPrivateChatPartner(null);
     		   } else
     		     pSender.sendMessage(ChatColor.RED + "Can't do anything without playername nor message");
@@ -540,7 +540,7 @@ public class Mudkips extends JavaPlugin {
   }
   public String afkNotification(MudkipsPlayer playerAfk) {
 //	if(playerAfk.isAfk())
-	 return AFK_MESSAGE.replaceAll("%s", playerAfk.getName()).replaceAll("%a", playerAfk.afkMessage());
+	 return replaceAll(AFK_MESSAGE, new char[] {'s', 'm'}, new String[] { playerAfk.getName(), playerAfk.afkMessage()});
 	  
   }
   public MudkipsPlayer getMudkipsPlayer(String playerName) {
@@ -550,9 +550,9 @@ public class Mudkips extends JavaPlugin {
 	try {
 	  MudkipsPlayer mPlayer = getMudkipsPlayer(p.getName());
 	  if(mPlayer == null)
-	    p.sendMessage(WELCOME_MESSAGE.replaceAll("%s", p.getDisplayName()));
+	    p.sendMessage(replaceAll(WELCOME_MESSAGE, 's', p.getDisplayName()));
 	  else
-	    p.sendMessage(WELCOME_MESSAGE.replaceAll("%s", mPlayer.getAlias()));
+	    p.sendMessage(replaceAll(WELCOME_MESSAGE, 's', mPlayer.getAlias()));
 	} catch(NullPointerException exc) {
 	  this.getServer().getLogger().log(Level.WARNING, "NullPointerException while sending MOTD!");
 	}
@@ -560,16 +560,22 @@ public class Mudkips extends JavaPlugin {
   public void sayChat(Player p, String msg) {
 //    if(sendMessageAround(CHAT_MSG.replaceAll("%s",p.getDisplayName()).replaceAll("%m",msg), p.getLocation(), CHAT_PROPAGATION_DISTANCE) <= 1)
 //	  p.sendMessage(this.CHAT_NO_RECEIVER.replaceAll("%s",p.getDisplayName()));
-    if(sendMessageAround(replaceAll(CHAT_MSG, new char[]{'s','m'}, new String[] {p.getDisplayName(), msg}), p.getLocation(), CHAT_PROPAGATION_DISTANCE) <= 1)
-	  p.sendMessage(replaceAll(CHAT_NO_RECEIVER, new char[] {'s'}, new String[] {p.getDisplayName()}));
+	if(p != null) {
+	  String playerName = p.getDisplayName();
+	  if(playerName.equals(p.getName()))
+        if(mapPlayers.containsKey(p.getName()))
+    	  playerName = mapPlayers.get(p.getName()).getAlias();
+      if(sendMessageAround(replaceAll(CHAT_MSG, new char[]{'s','m'}, new String[] {playerName, msg}), p.getLocation(), CHAT_PROPAGATION_DISTANCE) <= 1)
+	    p.sendMessage(replaceAll(CHAT_NO_RECEIVER, 's', p.getDisplayName()));
+	}
   }
   public void rpChat(Player p, String action) {
 	MudkipsPlayer mP = mapPlayers.get(p.getName());
 	String msg = null;
 	if(mP != null && p.getDisplayName().equals(p.getName()))
-	  msg = ACTION_MSG.replaceAll("%s",mP.getAlias()).replaceAll("%m",action);
+      msg = replaceAll(ACTION_MSG, new char[] {'s', 'm'}, new String[] {mP.getAlias(), action});
 	else
-	  msg = ACTION_MSG.replaceAll("%s",p.getDisplayName()).replaceAll("%m",action);
+	  msg = replaceAll(ACTION_MSG, new char[] {'s', 'm'}, new String[] {p.getDisplayName(), action});
 	if(sendMessageAround(msg, p.getLocation(), ACTION_PROPAGATION_DISTANCE) <= 1)
 	  p.sendMessage(ACTION_NO_RECEIVER.replaceAll("%s", mP.getAlias()));
   }
@@ -578,9 +584,9 @@ public class Mudkips extends JavaPlugin {
     MudkipsPlayer mPlayer = mapPlayers.get(sender.getName());
 	String msg = null;
 	if(mPlayer != null && sender.getDisplayName().equals(sender.getName()))
-	  msg = WHISPER_MSG.replaceAll("%s", mPlayer.getAlias()).replaceAll("%m", message);
+	  msg = replaceAll(WHISPER_MSG, new char[] {'s', 'm'}, new String[] {mPlayer.getAlias(), message});
 	else
-	  msg = WHISPER_MSG.replaceAll("%s", sender.getDisplayName()).replaceAll("%m", message);
+	  msg = replaceAll(WHISPER_MSG, new char[] {'s', 'm'}, new String[] {sender.getDisplayName(), message});
 
 	if(sendMessageAround(msg, sender.getLocation(), WHISPER_PROPAGATION_DISTANCE) <= 1)
 	  sender.sendMessage(WHISPER_NO_RECEIVER.replaceAll("%s", mPlayer.getAlias()));
@@ -589,9 +595,9 @@ public class Mudkips extends JavaPlugin {
 	MudkipsPlayer mPlayer = mapPlayers.get(sender.getName());
 	String msg = null;
 	if(mPlayer != null && sender.getDisplayName().equals(sender.getName()))
-	  msg = SHOUT_MSG.replaceAll("%s", mPlayer.getAlias()).replaceAll("%m", message);
+	  msg = replaceAll(SHOUT_MSG, new char[] {'s', 'm'}, new String[]{mPlayer.getAlias(), message});
 	else
-	  msg = SHOUT_MSG.replaceAll("%s", sender.getDisplayName()).replaceAll("%m", message);
+	  msg = replaceAll(SHOUT_MSG, new char[] {'s', 'm'}, new String[]{sender.getDisplayName(), message});
 	
 	if(sendMessageAround(msg, sender.getLocation(), SHOUT_PROPAGATION_DISTANCE) <= 1)
       sender.sendMessage(SHOUT_NO_RECEIVER.replaceAll("%s", mPlayer.getAlias()));
@@ -732,10 +738,31 @@ public class Mudkips extends JavaPlugin {
 		for(; j < replacer.length; j++)
 		  if(replacer[j] == c)
 		    break;
-		if(j == replacer.length && j < replacements.length) {
+		if(j == replacer.length || j >= replacements.length) {
 		  buf.append("%"+c);
 		} else {
 		  buf.append(replacements[j]);
+		}
+		modReplace = false;
+	  } else if(c == '%') {
+		modReplace = true;
+	  } else {
+	    buf.append(c);
+	  }
+	}
+   return buf.toString();
+  }
+  public String replaceAll(String origin, char replacer, String replacement) {
+	StringBuilder buf = new StringBuilder();
+	//modReplace: %modulus + char
+	boolean modReplace = false;
+	for(int i = 0; i < origin.length(); i++) {
+	  char c = origin.charAt(i);
+	  if(modReplace) {
+		if(c != replacer) {
+		  buf.append("%"+c);
+		} else {
+		  buf.append(replacement);
 		}
 		modReplace = false;
 	  } else if(c == '%') {
