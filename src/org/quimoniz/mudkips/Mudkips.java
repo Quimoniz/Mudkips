@@ -271,28 +271,14 @@ public class Mudkips extends JavaPlugin {
         	 if(args.length >= 2) {
         	   param = args[1].toLowerCase();
         	   if(! param.equalsIgnoreCase("thunder")) {
-        	     if(args[0].equalsIgnoreCase("thunder")) {
-              	   if(pSender != null) {
-              	     worldToChangeWeatherIn = pSender.getWorld();
-              	   } else {
-              		 java.util.List <org.bukkit.World> listOfWorlds = this.getServer().getWorlds();
-              		 if(listOfWorlds.size() == 1)
-              	       worldToChangeWeatherIn = listOfWorlds.get(0);
-              	   }
-              	   if(worldToChangeWeatherIn != null)
-              	     setThunder(worldToChangeWeatherIn, args[1], sender);
-              	   else
-              		 sender.sendMessage(ChatColor.RED + "Could not associate a World!"); 
-        	     } else {
         	       worldToChangeWeatherIn = this.getServer().getWorld(args[0]);
-        	     }
         	   } else {
           		 java.util.List <org.bukkit.World> listOfWorlds = this.getServer().getWorlds();
         		 if(listOfWorlds.size() == 1)
         	       worldToChangeWeatherIn = listOfWorlds.get(0);
         	   }
         	   if(param.equalsIgnoreCase("thunder")) {
-        	     paramThunder = param = args[2].toLowerCase();
+        	     paramThunder = args[2].toLowerCase();
         	     param = args[0].toLowerCase();
         	   } else if(args.length >= 4) {
         		 if(args[2].equalsIgnoreCase("thunder"))
@@ -379,6 +365,9 @@ public class Mudkips extends JavaPlugin {
     	   else
     	     buf.append("Logged in " + duration + " days ago.\n");
     	   sender.sendMessage(buf.toString());
+    	 } else {
+    	   sender.sendMessage("Cant associate a Player.");
+    	   return false;
     	 }
        }
        else if(rawCommand.equals("say")) {
