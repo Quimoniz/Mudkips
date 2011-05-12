@@ -558,8 +558,10 @@ public class Mudkips extends JavaPlugin {
 	}
   }
   public void sayChat(Player p, String msg) {
-    if(sendMessageAround(CHAT_MSG.replaceAll("%s",p.getDisplayName()).replaceAll("%m",msg), p.getLocation(), CHAT_PROPAGATION_DISTANCE) <= 1)
-	  p.sendMessage(this.CHAT_NO_RECEIVER.replaceAll("%s",p.getDisplayName()));
+//    if(sendMessageAround(CHAT_MSG.replaceAll("%s",p.getDisplayName()).replaceAll("%m",msg), p.getLocation(), CHAT_PROPAGATION_DISTANCE) <= 1)
+//	  p.sendMessage(this.CHAT_NO_RECEIVER.replaceAll("%s",p.getDisplayName()));
+    if(sendMessageAround(replaceAll(CHAT_MSG, new char[]{'s','m'}, new String[] {p.getDisplayName(), msg}), p.getLocation(), CHAT_PROPAGATION_DISTANCE) <= 1)
+	  p.sendMessage(replaceAll(CHAT_NO_RECEIVER, new char[] {'s'}, new String[] {p.getDisplayName()}));
   }
   public void rpChat(Player p, String action) {
 	MudkipsPlayer mP = mapPlayers.get(p.getName());
@@ -715,6 +717,34 @@ public class Mudkips extends JavaPlugin {
 	   }
 	  }
     }
+  }
+  /*
+   * @param: origin the string wherein to replace, replacer where to replace %<char> tags, replacement the stuff that will replace it
+   */
+  public String replaceAll(String origin, char [] replacer, String [] replacements) {
+	StringBuilder buf = new StringBuilder();
+	//modReplace: %modulus + char
+	boolean modReplace = false;
+	for(int i = 0; i < origin.length(); i++) {
+	  char c = origin.charAt(i);
+	  if(modReplace) {
+		int j = 0;
+		for(; j < replacer.length; j++)
+		  if(replacer[j] == c)
+		    break;
+		if(j == replacer.length && j < replacements.length) {
+		  buf.append("%"+c);
+		} else {
+		  buf.append(replacements[j]);
+		}
+		modReplace = false;
+	  } else if(c == '%') {
+		modReplace = true;
+	  } else {
+	    buf.append(c);
+	  }
+	}
+   return buf.toString();
   }
 }
 
