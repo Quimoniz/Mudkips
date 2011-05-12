@@ -367,6 +367,10 @@ public class Mudkips extends JavaPlugin {
     	   sender.sendMessage(buf.toString());
     	 }
        }
+       else if(rawCommand.equals("say")) {
+    	 if(pSender != null)
+    	   sayChat(pSender, concatenate(args, " ", 0));
+       }
       return true;
     }
   public void saveProperties() {
@@ -391,41 +395,46 @@ public class Mudkips extends JavaPlugin {
   public void playerChat(PlayerChatEvent e) {
 	Player p = e.getPlayer();
 	String msg = e.getMessage();
-	Set<AliasEntry<String,String>> aliasSet = null;
-	if(cachedAliasSet != null)
-	  aliasSet = cachedAliasSet.get();
-	if(aliasSet == null || mapPlayers.size() != aliasSet.size()) {
-      //Creating a new HashSet with Name -> Alias entries (stored in Class AliasEntry<String,String>)
-      java.util.HashSet<AliasEntry<String, String>> newSet = new java.util.HashSet<AliasEntry<String, String>>(mapPlayers.size());
-      Iterator<MudkipsPlayer> iter = mapPlayers.values().iterator();
-      while(iter.hasNext()) {
-    	MudkipsPlayer mPlayer = iter.next();
-    	AliasEntry<String,String> entry = new AliasEntry<String,String>(mPlayer.getName(),mPlayer.getAlias());
-    	if(newSet.contains(entry))
-    	  entry = new AliasEntry<String,String>(mPlayer.getName(),mPlayer.getName());
-    	if(newSet.contains(entry))
-    	  getServer().getLogger().log(Level.INFO, "Failed to register an Alias for user \"" + mPlayer.getName() + "\". Entry is in HashSet already.");
-    	else
-    	  newSet.add(entry);
-      }
-      aliasSet = newSet;
-	  cachedAliasSet = new SoftReference<Set<AliasEntry<String,String>>>(aliasSet);
-    }
+	try {
+	  Set<AliasEntry<String,String>> aliasSet = null;
+	  if(cachedAliasSet != null)
+		  aliasSet = cachedAliasSet.get();
+	  if(aliasSet == null || mapPlayers.size() != aliasSet.size()) {
+		  //Creating a new HashSet with Name -> Alias entries (stored in Class AliasEntry<String,String>)
+		  java.util.HashSet<AliasEntry<String, String>> newSet = new java.util.HashSet<AliasEntry<String, String>>(mapPlayers.size());
+		  Iterator<MudkipsPlayer> iter = mapPlayers.values().iterator();
+		  while(iter.hasNext()) {
+			  MudkipsPlayer mPlayer = iter.next();
+			  AliasEntry<String,String> entry = new AliasEntry<String,String>(mPlayer.getName(),mPlayer.getAlias());
+			  if(newSet.contains(entry))
+				    entry = new AliasEntry<String,String>(mPlayer.getName(),mPlayer.getName());
+			  if(newSet.contains(entry))
+				    getServer().getLogger().log(Level.INFO, "Failed to register an Alias for user \"" + mPlayer.getName() + "\". Entry is in HashSet already.");
+			  else
+				   newSet.add(entry);
+			  }
+		  aliasSet = newSet;
+		  cachedAliasSet = new SoftReference<Set<AliasEntry<String,String>>>(aliasSet);
+		  }
 	
-	Iterator<AliasEntry<String,String>> iter = aliasSet.iterator();
-	String[] regexStart = new String[]{"^","( |,|:)?.*"};
-	String[] regexEnd = new String[]{".*( |,|:)?","$"};
-	//Checking which player has been mentioned by some chatter, at the begin or end of a message
-	while(iter.hasNext()) {
-	  AliasEntry<String, String> alias=iter.next();
-      String msgLowerCase = msg.toLowerCase();
-	  if(msgLowerCase.matches(regexStart[0] + alias.getKey().toLowerCase() + regexStart[1]) || msgLowerCase.matches(regexStart[0] + alias.getValue().toLowerCase() + regexStart[1])
-		|| msgLowerCase.matches(regexEnd[0] + alias.getKey().toLowerCase() + regexEnd[1]) || msgLowerCase.matches(regexEnd[0] + alias.getValue().toLowerCase()+ regexEnd[1])) {
-	    MudkipsPlayer mP = mapPlayers.get(alias.getKey());
-		if(mP != null)
-		  playerMentioned(mP, p);  
-	  }
+	  Iterator<AliasEntry<String,String>> iter = aliasSet.iterator();
+	  String[] regexStart = new String[]{"^","( |,|:)?.*"};
+	  String[] regexEnd = new String[]{".*( |,|:)?","$"};
+	  //Checking which player has been mentioned by some chatter, at the begin or end of a message
+	  while(iter.hasNext()) {
+		  AliasEntry<String, String> alias=iter.next();
+		  String msgLowerCase = msg.toLowerCase();
+		  if(msgLowerCase.matches(regexStart[0] + alias.getKey().toLowerCase() + regexStart[1]) || msgLowerCase.matches(regexStart[0] + alias.getValue().toLowerCase() + regexStart[1])
+				  || msgLowerCase.matches(regexEnd[0] + alias.getKey().toLowerCase() + regexEnd[1]) || msgLowerCase.matches(regexEnd[0] + alias.getValue().toLowerCase()+ regexEnd[1])) {
+			  MudkipsPlayer mP = mapPlayers.get(alias.getKey());
+			  if(mP != null)
+				  playerMentioned(mP, p);  
+			  }
 		
+		  }
+	} catch(Exception exc) {
+		//No exception handling here
+		getServer().getLogger().log(Level.INFO, "Exception during checking of aliases: " + exc.toString());
 	}
    MudkipsPlayer mP = mapPlayers.get(p.getName());
    if( mP != null)
@@ -440,10 +449,9 @@ public class Mudkips extends JavaPlugin {
 	   }
 	 }
   if(!e.isCancelled()) {
-	if(sendMessageAround(CHAT_MSG.replaceAll("%s",p.getDisplayName()).replaceAll("%m",e.getMessage()), p.getLocation(), CHAT_PROPAGATION_DISTANCE) <= 1)
-	  p.sendMessage(this.CHAT_NO_RECEIVER.replaceAll("%s",p.getDisplayName()));
-	  e.setCancelled(true);
-    }
+	sayChat(p, e.getMessage());
+    e.setCancelled(true);
+  }
   }
   public String concatenate(String[] concat, String delim, int offset) {
 	StringBuilder concatenateBuf = new StringBuilder(concat.length*4);
@@ -534,6 +542,10 @@ public class Mudkips extends JavaPlugin {
 	} catch(NullPointerException exc) {
 	  this.getServer().getLogger().log(Level.WARNING, "NullPointerException while sending MOTD!");
 	}
+  }
+  public void sayChat(Player p, String msg) {
+    if(sendMessageAround(CHAT_MSG.replaceAll("%s",p.getDisplayName()).replaceAll("%m",msg), p.getLocation(), CHAT_PROPAGATION_DISTANCE) <= 1)
+	  p.sendMessage(this.CHAT_NO_RECEIVER.replaceAll("%s",p.getDisplayName()));
   }
   public void rpChat(Player p, String action) {
 	MudkipsPlayer mP = mapPlayers.get(p.getName());

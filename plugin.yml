@@ -44,3 +44,6 @@ commands:
   info:
     description: Receive information about a player
     usage: /info <Player>
+  say:
+    description: Just ordinarily saying something
+    usage: /say <Message>
