@@ -337,31 +337,35 @@ public class Mudkips extends JavaPlugin {
     		 return false;
     	   }
     	 } else {
-    	   playerName = args[0];
+    	   Player p = matchPlayer(args[0]);
+    	   if(p != null)
+    	     playerName = p.getName();
     	 }
     	 MudkipsPlayer mPlayer = mapPlayers.get(playerName);
-    	 StringBuilder buf = new StringBuilder();
-    	 //mPlayer.afkMessage()
-    	 buf.append(mPlayer.getName() + ": \n");
-    	 if(mPlayer.isAfk())
-    	   buf.append(this.afkNotification(mPlayer) + "\n" + ChatColor.WHITE);
-    	 if(pSender != null && !pSender.getName().equals(mPlayer.getName())) {
-    	   if(calcDistance(pSender.getLocation(), mPlayer.getPlayer().getLocation(), true) < CHAT_PROPAGATION_DISTANCE)
-    		 buf.append("Is somewhere around you\n");
+    	 if(mPlayer != null) {
+    	   StringBuilder buf = new StringBuilder();
+    	   //mPlayer.afkMessage()
+    	   buf.append(mPlayer.getName() + ": \n");
+    	   if(mPlayer.isAfk())
+    	     buf.append(this.afkNotification(mPlayer) + "\n" + ChatColor.WHITE);
+    	   if(pSender != null && !pSender.getName().equals(mPlayer.getName())) {
+    	     if(calcDistance(pSender.getLocation(), mPlayer.getPlayer().getLocation(), true) < CHAT_PROPAGATION_DISTANCE)
+    		   buf.append("Is somewhere around you\n");
+    	     else
+    		   buf.append("Is far away\n");
+    	   }
+    	   double duration = (mPlayer.getPlayer().getWorld().getFullTime()-mPlayer.getInitTime())/24000.00;
+    	   duration *= 100;
+    	   duration = (int) duration;
+    	   duration /= 100;
+    	   if(duration < 0.02)
+    	     buf.append("Just logged in");
+    	   else if(duration >= 0.45 && duration <= 0.55)
+    	     buf.append("Logged in half a day ago.\n");
     	   else
-    		 buf.append("Is far away\n");
+    	     buf.append("Logged in " + duration + " days ago.\n");
+    	   sender.sendMessage(buf.toString());
     	 }
-    	 double duration = (mPlayer.getPlayer().getWorld().getFullTime()-mPlayer.getInitTime())/24000.00;
-    	 duration *= 100;
-    	 duration = (int) duration;
-    	 duration /= 100;
-    	 if(duration < 0.02)
-    	   buf.append("Just logged in");
-    	 else if(duration >= 0.45 && duration <= 0.55)
-    	   buf.append("Logged in half a day ago.\n");
-    	 else
-    	   buf.append("Logged in " + duration + " days ago.\n");
-    	 sender.sendMessage(buf.toString());
        }
       return true;
     }
