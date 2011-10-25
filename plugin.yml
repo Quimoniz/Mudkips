@@ -1,6 +1,6 @@
 name: Mudkips
 main: org.quimoniz.mudkips.Mudkips
-version: 0.01
+version: 0.30
 commands:
   online:
     description: Retrieves the List of players being online
@@ -38,12 +38,80 @@ commands:
   s:
     description: Shortcut for /shout
     usage: /s <Message>
+  whisper:
+    description: Whisper something
+    usage: /whisper <Message>
   w:
     description: Whisper something
     usage: /w <Message>
+  announce:
+    description: Announcing
+    usage: /announce <Message>
   info:
     description: Receive information about a player
     usage: /info <Player>
   say:
     description: Just ordinarily saying something
     usage: /say <Message>
+  loc:
+    description: Teleport to a certain Location
+    usage: /loc [<player>] <location>
+  locset:
+    description: Set a name for a location, warp
+    usage: /locset
+  phere:
+    description: Teleport a player to you
+    usage: /phere <player> [up/down]
+  pto:
+    description: Teleport to a player
+    usage: /pto <player> [up/down]
+  tp:
+    description: Teleport a player to another player
+    usage: /tp <player> <player>
+  spawn:
+    description: Teleport to your spawn
+    usage: /spawn
+  rename:
+    description: Rename yourself
+    usage: /rename <new name>
+  mob:
+    description: Spawn a mob
+    usage: /mob <mobname> [-c <color>] [-n <count>]
+  slappy:
+    description: Slaps a player every time he shouts
+    usage: /slappy <player>
+    credit: Goes to ben657
+  slap:
+    description: Slaps a player
+    usage: /slap <player>
+    credit: Goes to ben657
+  date:
+    description: Returns the current date
+    usage: /date
+  mudkips:
+    description: Does some plugin related stuff
+    usage: undocumented
+  portal:
+    description: Do something with a portal
+    usage: /portal
+  pvp:
+    description: Enable/Disable pvp for yourself
+    usage: /pvp [on|off]
+  inventory:
+    description: Display the inventory of a player
+    usage: /inventory <player>
+  vicinity:
+    description: Tells which players are in chat vicinity
+    usage: /vicinity
+  kick:
+    description: Kicks a player
+    usage: /kick <player> [reason]
+  tempban:
+    description: Temporarily bans a player
+    usage: /tempban <player> <seconds> [reason]
+  jail:
+    description: Jail a player
+    usage: /jail <player> <seconds>
+  kill:
+    description: Kill yourself or another player
+    usage: /kill [<player>]
