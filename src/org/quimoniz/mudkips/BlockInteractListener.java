@@ -19,7 +19,9 @@ public class BlockInteractListener extends BlockListener {
   private boolean blockFirePlacementCompletly = false;
   private HashSet<Integer> blockBurningIds = null;
   private boolean blockBurningCompletly = false;
+  private boolean tallGrassMakesGrass = false;
   public boolean blockIgniteWasRegistered = false;
+  public boolean blockPlacementWasRegistered = false;
   public BlockInteractListener(Mudkips mudkips) {
     this.mudkips = mudkips;
   }
@@ -75,6 +77,11 @@ public class BlockInteractListener extends BlockListener {
         e.setCancelled(true);
 //        System.out.println("Fire is cancelled SPECIFICALLY");
         return;
+      }
+    } else if(tallGrassMakesGrass && e.getBlockPlaced().getTypeId() == 31) {
+      Block blockBelow = e.getBlockPlaced().getRelative(0, -1, 0);
+      if(blockBelow != null && blockBelow.getTypeId() == 3) {
+        blockBelow.setTypeId(2, true);
       }
     }
   }
@@ -183,5 +190,8 @@ public class BlockInteractListener extends BlockListener {
   }
   public void blockAllBurning(boolean blockCompletly) {
     blockBurningCompletly = blockCompletly;
+  }
+  public void tallGrassMakesGrassBlock(boolean makes) {
+    tallGrassMakesGrass = makes;
   }
 }

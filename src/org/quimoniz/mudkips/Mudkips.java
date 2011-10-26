@@ -235,6 +235,7 @@ public class Mudkips extends JavaPlugin {
           if(touchListener == null) touchListener = new BlockInteractListener(this);
           touchListener.blockJailPlace(true);
           pm.registerEvent(Event.Type.BLOCK_PLACE, touchListener, Event.Priority.Normal, this);
+          touchListener.blockPlacementWasRegistered = true;
         }
         if(myProps.getBooleanProperty("enable-jail") && myProps.getBooleanProperty("protect-jail-pickup")) {
           playerListener.blockJailPickup(true);
@@ -331,6 +332,14 @@ public class Mudkips extends JavaPlugin {
                 }
               }
             }
+          }
+        }
+        if(myProps.getBooleanProperty("tall-grass-makes-grass-block")) {
+          if(touchListener == null) touchListener = new BlockInteractListener(this);
+          touchListener.tallGrassMakesGrassBlock(true);
+          if(!touchListener.blockPlacementWasRegistered) {
+            pm.registerEvent(Event.Type.BLOCK_PLACE, touchListener, Event.Priority.Normal, this);
+            touchListener.blockPlacementWasRegistered = true;
           }
         }
         if(myProps.getBooleanProperty("enable-portals")) {
