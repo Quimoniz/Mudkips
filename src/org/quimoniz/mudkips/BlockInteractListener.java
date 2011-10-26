@@ -65,7 +65,7 @@ public class BlockInteractListener extends BlockListener {
       }
     }
     if(e.getBlockPlaced().getTypeId() == 51) {
-      System.out.println("Fire is placed!");
+//      System.out.println("Fire is placed!");
       if(blockFirePlacementCompletly) {
         e.setCancelled(true);
 //        System.out.println("Fire is cancelled COMPLETLY");
