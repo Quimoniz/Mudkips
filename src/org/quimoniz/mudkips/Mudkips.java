@@ -466,7 +466,7 @@ public class Mudkips extends JavaPlugin {
             }
           }
       } //The help command prints out HELP_MSG to the player
-        else if(rawCommand.indexOf("help") == 0) {
+        else if(rawCommand.indexOf("help") == 0) { //TODO: Move help to /mudkips (linux like man pages)or find another good solution
           if(pSender != null) {
             if(askPermission(sender, "mudkips.help", true, true, ChatColor.RED + "You are not authorized to use the /help command!"))
               mPlayer.sendMessage(myProps.getProperty("help"));
@@ -731,10 +731,13 @@ public class Mudkips extends JavaPlugin {
           }
         } else if(rawCommand.indexOf("me") == 0) {
           if(pSender != null) {
-            if(args.length > 0)
-              chatObj.playerChat(pSender, Chat.Type.RPG, args);
-            else
+            if(args.length > 0) {
+              if(askPermission(sender, "mudkips.chat.me", true, true, ChatColor.RED + "You are not authorized to use the /me command!")) {
+                chatObj.playerChat(pSender, Chat.Type.RPG, args);
+              }
+            } else {
               pSender.sendMessage(ChatColor.RED + "You did not specify an RP action.");
+            }
           } else if(sender.isOp()) {
             chatObj.consoleChat(sender, Chat.Type.RPG, args);
           }
@@ -903,7 +906,7 @@ public class Mudkips extends JavaPlugin {
            chatObj.consoleChat(sender, Chat.Type.ANNOUNCE, args);
          }
        } else if(rawCommand.equalsIgnoreCase("info")) {
-         if(askPermission(sender, "mudkips.info.invoke", true, true, ChatColor.RED + "You are not authorized to use the /info command!")) {
+         if(askPermission(sender, "mudkips.info", true, true, ChatColor.RED + "You are not authorized to use the /info command!")) {
            String playerName = null;
            if(args.length < 1) {
              if(pSender != null) {
@@ -956,7 +959,7 @@ public class Mudkips extends JavaPlugin {
                    buf.append("\n");
                  }
                }
-               if(hasPermission(sender, "mudkips.pvp", true, true)) {
+               if(hasPermission(sender, "mudkips.info.pvp", true, true)) {
                  if(mPlayerInfo.isPvpEnabled()) {
                    buf.append("Has PvP enabled.\n");
                  } else {
@@ -966,12 +969,14 @@ public class Mudkips extends JavaPlugin {
                if(mPlayerInfo.isJailed()) {
                  buf.append("Is jailed for " + StringUtil.describeDuration(mPlayerInfo.getJailedForDuration(), "en") + ".\n");
                }
-               if(mPlayerInfo.getTimesDied() < 1) {
-                 buf.append("Never died.\n");
-               } else {
-                 buf.append("Died " + mPlayerInfo.getTimesDied() + " times.\n");
+               if(hasPermission(sender, "mudkips.info.stats.death", true, true)) {
+                 if(mPlayerInfo.getTimesDied() < 1) {
+                   buf.append("Never died.\n");
+                 } else {
+                   buf.append("Died " + mPlayerInfo.getTimesDied() + " times.\n");
+                 }
                }
-               if(hasPermission(sender, "mudkips.info.login", true, true)) {
+               if(hasPermission(sender, "mudkips.info.stats.login", true, true)) {
                  double duration = (mPlayerInfo.getPlayer().getWorld().getFullTime()-mPlayerInfo.getInitTime())/24000.00;
                  duration *= 100;
                  duration = (int) duration;
@@ -1146,6 +1151,7 @@ public class Mudkips extends JavaPlugin {
                }
                return false;
              }
+             //TODO: Add Permissions nodes for 1: Animal / Hostile Mob / Nether Mob, 2: Make every mob a Permission Node
              DyeColor sheepColor = null;
              if(colorName != null && mobType.equals(CreatureType.SHEEP)) {
                if("BLACK".equals(colorName)) {
@@ -1712,7 +1718,7 @@ public class Mudkips extends JavaPlugin {
    MudkipsPlayer mP = playerProvider.get(p);
    if( mP != null) {
      if(mP.inPrivateChat()) {
-       if(askPermission(p, "mudkips.chat.message", true, true, ChatColor.RED + "You are not authorized to message others!"))
+       if(askPermission(p, "mudkips.chat.pmsg", true, true, ChatColor.RED + "You are not authorized to message others!"))
          chatObj.playerChat(p, Chat.Type.PERSIST, new String[] {msg});
        e.setCancelled(true);
      }

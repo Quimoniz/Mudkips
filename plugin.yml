@@ -1,6 +1,14 @@
 name: Mudkips
+version: 0.31
 main: org.quimoniz.mudkips.Mudkips
-version: 0.30
+load: PoStWoRlD
+author: quimoniz
+softdepend: [Permissions]
+website: http://mc.resonanzkaska.de
+description: General purpose Plugin
+
+
+
 commands:
   online:
     description: Retrieves the List of players being online
@@ -115,3 +123,199 @@ commands:
   kill:
     description: Kill yourself or another player
     usage: /kill [<player>]
+
+
+
+
+
+
+permissions:
+  mudkips.*:
+    description: Grants permission to all Mudkips commands.
+    children:
+      mudkips.playerlist: true
+      mudkips.afk: true
+      mudkips.help: true
+      mudkips.motd: true
+      mudkips.teleport.*: true
+      mudkips.teleport.loc.*: true
+      mudkips.teleport.loc.set: true
+      mudkips.teleport.loc.setspawn: true
+      mudkips.chat.*: true
+      mudkips.announce: true
+      mudkips.info.*: true
+      mudkips.kill.*: true
+      mudkips.weather: true
+      mudkips.spawn: true
+      mudkips.mob: true
+      mudkips.slaponce: true
+      mudkips.slappy: true
+      mudkips.date.get: true
+      mudkips.portal: true
+      mudkips.pvp: true
+      mudkips.pvp.change: true
+      mudkips.inventory: true
+      mudkips.vicinity: true
+      mudkips.kick: true
+      mudkips.tempban: true
+      mudkips.jail: true
+  mudkips.teleport.*:
+    description: Grants permission to use pto, phere, tp
+    children:
+      mudkips.teleport.to: true
+      mudkips.teleport.phere: true
+      mudkips.teleport.tp: true
+  mudkips.teleport.loc.*:
+    description: Grants permissions to use loc
+    children:
+      mudkips.teleport.loc.warp: true
+      mudkips.teleport.loc.pos: true
+      mudkips.teleport.loc.playerwarp: true
+      mudkips.teleport.loc.playerpos: true
+  mudkips.chat.*:
+    description: Grants full permissions to chat commands
+    children:
+      mudkips.chat.me: true
+      mudkips.chat.msg: true
+      mudkips.chat.pmsg: true
+      mudkips.chat.whisper: true
+      mudkips.chat.shout: true
+      mudkips.chat.say: true
+  mudkips.info.*:
+    description: Grants full information about players
+    children:
+      mudkips.info.invoke: true
+      mudkips.info.ip: true
+      mudkips.info.afk: true
+      mudkips.info.proximity: true
+      mudkips.info.pvp: true
+      mudkips.info.stats.death: true
+      mudkips.info.stats.login: true
+  mudkips.kill.*:
+    description: Grants full capabilities to smite
+    children:
+      mudkips.kill.self: true
+      mudkips.kill.other: true
+  mudkips.playerlist:
+    description: Allows usage of /who, /playerlist and /online
+    default: true
+  mudkips.afk:
+    description: Allows usage of /afk
+    default: true
+  mudkips.help:
+    description: Enables the usage of the help command
+    default: true
+  mudkips.motd:
+    description: Grants allowance to see the motd
+    default: true
+  mudkips.teleport.to:
+    description: Allows usage of the /pto command
+    default: op
+  mudkips.teleport.phere:
+    description: Allows usage of the /phere command
+    default: op
+  mudkips.teleport.tp:
+    description: Allows usage of the /tp command
+    default: op
+  mudkips.teleport.loc.warp:
+    description: Allows warping with the /loc command
+    default: op
+  mudkips.teleport.loc.pos:
+    description: Allows teleporting to a definite Position with the /loc command
+    default: op
+  mudkips.teleport.loc.playerwarp:
+    description: Allows warping other players with the /loc command
+    default: op
+  mudkips.teleport.loc.playerpos:
+    description: Allows teleporting another player to a certain position by using the /loc command
+    default: op
+  mudkips.chat.me:
+    description: Allows for the description of RPG actions
+    default: true
+  mudkips.chat.msg:
+    description: Grants the ability to message other players
+    default: true
+  mudkips.chat.pmsg:
+    description: Grants the capability to switch into a chat session with another player
+    default: true
+  mudkips.chat.whisper:
+    description: Enables whispering
+    default: true
+  mudkips.chat.shout:
+    description: Allows usage of /shout to shout
+    default: true
+  mudkips.chat.say:
+    description: Enables default saying
+    default: true
+  mudkips.announce:
+    description: Grants the skill of announcing globally
+    default: op
+  mudkips.info:
+    description: Grants the usage of /info for information on a player
+    default: true
+  mudkips.info.ip:
+    description: Display the ip of others
+    default: op
+  mudkips.info.afk:
+    description: Display a potential afk status of others
+    default: true
+  mudkips.info.proximity:
+    description: Will tell an approximation of the distance to another player
+    default: true
+  mudkips.info.pvp:
+    description: Will tell if another player has PvP enabled
+    default: true
+  mudkips.info.stats.death:
+    description: Will tell how often a player died
+    default: true
+  mudkips.info.stats.login:
+    description: Display how much time passed, since the player logged in
+    default: true
+  mudkips.kill.self:
+    description: Allows killing of yourself
+    default: true
+  mudkips.kill.other:
+    description: Allows smiting other players
+    default: op
+  mudkips.weather:
+    description: Grants permissions to change the weather
+    default: op
+  mudkips.spawn:
+    description: Allows usage of /spawn
+    default: true
+  mudkips.mob:
+    description: Allows for spawning of mobs
+    default: op
+  mudkips.slaponce:
+    description: Allows usage of /slap
+    default: op
+  mudkips.slappy:
+    description: Allows usage of /slappy
+    default: op
+  mudkips.date.get:
+    description: Allows invoking of /date
+    default: true
+  mudkips.portal:
+    description: Allows rerouting portals with /portal
+    default: op
+  mudkips.pvp:
+    description: Allows lookup of your own pvp status
+    default: true
+  mudkips.pvp.change:
+    description: Allows changing of pvp status
+    default: true
+  mudkips.inventory:
+    description: Grants insight into player's inventory with the command /inventory
+    default: op
+  mudkips.vicinity:
+    description: Will tell upon invocation which players are in the vicinity
+    default: true
+  mudkips.kick:
+    description: Allows kicking of players
+    default: op
+  mudkips.tempban:
+    description: Allows tempbanning of players
+    default: op
+  mudkips.jail:
+    description: Grants permission to jail players
+    default: op
