@@ -19,8 +19,6 @@ import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 import java.io.File;
 
-import com.nijiko.permissions.PermissionHandler;
-import com.nijikokun.bukkit.Permissions.Permissions;
 import org.bukkit.plugin.Plugin;
 
 import java.awt.Rectangle;
@@ -47,7 +45,7 @@ public class Mudkips extends JavaPlugin {
     private int dateProcesserTask;
     private String pathToProps = "mudkips.properties";
     public PermissionHandler permissionHandler;
-    private boolean usingPermissions = false;
+//    private boolean usingPermissions = false;
     private TimeCheckerTask dateProvider;
     
     /** Components */
@@ -121,7 +119,6 @@ public class Mudkips extends JavaPlugin {
       logStream = null;
       dateProcesserTask = -1;
       permissionHandler = null;
-      usingPermissions = false;
       warpHandler = null;
       errorHandler = null;
     }
@@ -148,14 +145,15 @@ public class Mudkips extends JavaPlugin {
         myProps = new PropertyManager(pathToProps, this.getServer());
         //if(myProps.getBooleanProperty("set-defaults", true))
         DefaultProperties.writeDefaultProperties(myProps);
-        if(myProps.getBooleanProperty("use-permissions")) {
-          setupPermissions();
-          usingPermissions = true;
-        }
       } catch(Exception exc) {
         // very bad, an exception at this point dimisses all the plugins capabilities
         this.getServer().getLogger().severe("Exception during initializing Properties");
         return;
+      }
+      try {
+        permissionHandler = new PermissionHandler(this.getServer(), myProps.getProperty("permissions"));
+      } catch(Exception exc) {
+        this.getServer().getLogger().severe("Exception during initializing PermissionHandler");
       }
       try {
         if(!this.getDataFolder().exists()) {
@@ -382,52 +380,7 @@ public class Mudkips extends JavaPlugin {
       }
       saveProperties();
     }
-    private boolean setupPermissions() {
-      if(permissionHandler == null) {
-        Plugin permPlugin = this.getServer().getPluginManager().getPlugin("Permissions");
-        if(permPlugin != null) {
-          this.permissionHandler = ((Permissions)permPlugin).getHandler();
-          return true;
-        }
-        if(permissionHandler == null) {
-          this.getServer().getLogger().log(Level.SEVERE, "Mudkips couldn't obtain Permissions Handler!");
-          return false;
-        } else { // This case can not be reached! However it produces error "This method must return [..]" if omitted
-          return true;
-        }
-      } else return true;
-    }
-    public boolean hasPermission(CommandSender p, String permNode, boolean defaultValNonOp, boolean defaultValOp) {
-      if(p == null) return defaultValNonOp;
-      if(!(p instanceof Player) && p.isOp()) {// Console always has permission
-        return true;
-      } else if(usingPermissions) {
-        if(permissionHandler == null) {
-          setupPermissions();
-        }
-        if(permissionHandler == null) {
-          this.getServer().getLogger().severe("Null pointer exception, deactivated Permissions.");
-          usingPermissions = false;
-        } else {
-          try {
-            return permissionHandler.has((Player)p, permNode);
-          } catch(NoClassDefFoundError exc) {
-            this.getServer().getLogger().severe("There is no nijikokun Permissions Plugin active, deactivated Permissions.");
-            usingPermissions = false;
-          }
-        }
-      }
-      return p.isOp() ? defaultValOp : defaultValNonOp;
-    }
-    public boolean askPermission(CommandSender p, String permNode, boolean defaultValNonOp, boolean defaultValOp, String revokeMessage) {
-      if(!hasPermission(p, permNode, defaultValNonOp, defaultValOp)) {
-        if(p != null)
-          p.sendMessage(revokeMessage);
-        return false;
-      } else {
-        return true;
-      }
-    }
+
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
       //firstof casting sender to a Player ...
       Player pSender = null;
@@ -444,13 +397,13 @@ public class Mudkips extends JavaPlugin {
       if(rawCommand.charAt(0) == '/') rawCommand = rawCommand.substring(1, rawCommand.length());
       //Player listing, ignores any arguments
       if(rawCommand.indexOf("who") == 0 || rawCommand.indexOf("online") == 0 || rawCommand.indexOf("playerlist") == 0) {
-        if(askPermission(sender, "mudkips.playerlist", true, true, ChatColor.RED + "You are not authorized to see the playerlist!")) {
+        if(permissionHandler.askPermission(sender, "mudkips.playerlist", true, true, ChatColor.RED + "You are not authorized to see the playerlist!")) {
           String playerListing = playerProvider.playerListing();
           sender.sendMessage(playerListing);
         }
       } else if(rawCommand.indexOf("afk") == 0) {
         if(pSender != null)
-          if(askPermission(sender, "mudkips.afk", true, true, ChatColor.RED + "You are not authorized to use the /afk command!")) {
+          if(permissionHandler.askPermission(sender, "mudkips.afk", true, true, ChatColor.RED + "You are not authorized to use the /afk command!")) {
             if(playerProvider.has(pSender)) {
               if(!mPlayer.isAfk()) {
                 String afkMessage= StringUtil.concatenate(args, " ", 0);
@@ -468,7 +421,7 @@ public class Mudkips extends JavaPlugin {
       } //The help command prints out HELP_MSG to the player
         else if(rawCommand.indexOf("help") == 0) { //TODO: Move help to /mudkips (linux like man pages)or find another good solution
           if(pSender != null) {
-            if(askPermission(sender, "mudkips.help", true, true, ChatColor.RED + "You are not authorized to use the /help command!"))
+            if(permissionHandler.askPermission(sender, "mudkips.help", true, true, ChatColor.RED + "You are not authorized to use the /help command!"))
               mPlayer.sendMessage(myProps.getProperty("help"));
               return true;
           } else {
@@ -476,11 +429,11 @@ public class Mudkips extends JavaPlugin {
           }
       }
         else if(rawCommand.indexOf("motd") == 0) {
-          if(askPermission(sender, "mudkips.motd", true, true, ChatColor.RED + "You are not authorized to use the /motd command!"))
+          if(permissionHandler.askPermission(sender, "mudkips.motd", true, true, ChatColor.RED + "You are not authorized to use the /motd command!"))
             sendMotd(sender);
       } else if( rawCommand.equals("pto")) {
         if(pSender != null) {
-             if(askPermission(pSender, "mudkips.teleport.to", false, true, ChatColor.RED + "You are not authorized to use the /pto command.")) {
+             if(permissionHandler.askPermission(pSender, "mudkips.teleport.to", false, true, ChatColor.RED + "You are not authorized to use the /pto command.")) {
                if(args.length >= 1) {
                  Player player = matchPlayer(args[0]);
                  if(player != null) {
@@ -505,7 +458,7 @@ public class Mudkips extends JavaPlugin {
           }
       } else if( rawCommand.equals("phere")) {
         if(pSender != null) {
-             if(askPermission(pSender, "mudkips.teleport.here", false, true, ChatColor.RED + "You are not authorized to use the /phere command.")) {
+             if(permissionHandler.askPermission(pSender, "mudkips.teleport.here", false, true, ChatColor.RED + "You are not authorized to use the /phere command.")) {
                if(args.length >= 1) {
                  Player player = matchPlayer(args[0]);
                  MudkipsPlayer mPlayerTo = this.getMudkipsPlayer(player.getName());
@@ -532,7 +485,7 @@ public class Mudkips extends JavaPlugin {
              }
           }
       } else if( rawCommand.equals("tp")) {
-        if(askPermission(sender, "mudkips.teleport.tp", false, true, ChatColor.RED + "You are not authorized to use the /tp command.")) {
+        if(permissionHandler.askPermission(sender, "mudkips.teleport.tp", false, true, ChatColor.RED + "You are not authorized to use the /tp command.")) {
              if(args.length >= 2) {
                Player playerB = matchPlayer(args[1]);
                Player playerA = matchPlayer(args[0]);
@@ -557,10 +510,10 @@ public class Mudkips extends JavaPlugin {
              }
            }
         } else if(rawCommand.equals("loc")) {
-        if(askPermission(sender, "mudkips.teleport.loc", false, true, ChatColor.RED + "You are not authorized to use the /loc command.")) {
+        if(permissionHandler.askPermission(sender, "mudkips.teleport.loc", false, true, ChatColor.RED + "You are not authorized to use the /loc command.")) {
           if(args.length > 0) {
             if(args.length == 1) { // teleport to a warp
-              if(askPermission(sender, "mudkips.teleport.loc.warp",false,true, ChatColor.RED + "You are not authorized to use the /loc command in that manner.")) {
+              if(permissionHandler.askPermission(sender, "mudkips.teleport.loc.warp",false,true, ChatColor.RED + "You are not authorized to use the /loc command in that manner.")) {
                 if(myProps.getBooleanProperty("enable-warps")) {
                   if(pSender != null) {
                     Location targetLoc;
@@ -578,7 +531,7 @@ public class Mudkips extends JavaPlugin {
             } else if(args.length == 2) {
               if(pSender != null) {
                 if(StringUtil.isInteger(args[0]) && StringUtil.isInteger(args[1])) {
-                  if(askPermission(sender, "mudkips.teleport.loc.pos",false,true, ChatColor.RED + "You are not authorized to use the /loc command in that manner.")) {
+                  if(permissionHandler.askPermission(sender, "mudkips.teleport.loc.pos",false,true, ChatColor.RED + "You are not authorized to use the /loc command in that manner.")) {
                     int x = 0, z = 0;
                     boolean parsingSuccess = false;
                     try {
@@ -610,7 +563,7 @@ public class Mudkips extends JavaPlugin {
                 }
               }
               if(myProps.getBooleanProperty("enable-warps")) {
-                if(askPermission(sender, "mudkips.teleport.loc.playerwarp",false,true, ChatColor.RED + "You are not authorized to use the /loc command in that manner.")) {
+                if(permissionHandler.askPermission(sender, "mudkips.teleport.loc.playerwarp",false,true, ChatColor.RED + "You are not authorized to use the /loc command in that manner.")) {
                   MudkipsPlayer playerToTeleport = getMudkipsPlayer(matchPlayer(args[0]).getName());
                   if(playerToTeleport != null) {
                     Location targetLoc;
@@ -628,7 +581,7 @@ public class Mudkips extends JavaPlugin {
             } else if(args.length == 3) {
               if(pSender != null) {
                 if(StringUtil.isInteger(args[0]) && StringUtil.isInteger(args[1]) && StringUtil.isInteger(args[2])) {
-                  if(askPermission(sender, "mudkips.teleport.loc.pos",false,true, ChatColor.RED + "You are not authorized to use the /loc command in that manner.")) {
+                  if(permissionHandler.askPermission(sender, "mudkips.teleport.loc.pos",false,true, ChatColor.RED + "You are not authorized to use the /loc command in that manner.")) {
                     int x = 0, y = 0, z = 0;
                     boolean parsingSuccess = false;
                     try {
@@ -653,7 +606,7 @@ public class Mudkips extends JavaPlugin {
                 }
               } else {
                 if(StringUtil.isInteger(args[1]) && StringUtil.isInteger(args[2])) {
-                  if(askPermission(sender, "mudkips.teleport.loc.playerpos",false,true, ChatColor.RED + "You are not authorized to use the /loc command in that manner.")) {
+                  if(permissionHandler.askPermission(sender, "mudkips.teleport.loc.playerpos",false,true, ChatColor.RED + "You are not authorized to use the /loc command in that manner.")) {
                     MudkipsPlayer playerToTeleport = getMudkipsPlayer(matchPlayer(args[0]).getName());
                     if(playerToTeleport != null) {
                       int x = 0, z = 0;
@@ -682,7 +635,7 @@ public class Mudkips extends JavaPlugin {
               }
             } else if(args.length == 4) {
               if(StringUtil.isInteger(args[1]) && StringUtil.isInteger(args[2]) && StringUtil.isInteger(args[3])) {
-                if(askPermission(sender, "mudkips.teleport.loc.playerpos",false,true, ChatColor.RED + "You are not authorized to use the /loc command in that manner.")) {
+                if(permissionHandler.askPermission(sender, "mudkips.teleport.loc.playerpos",false,true, ChatColor.RED + "You are not authorized to use the /loc command in that manner.")) {
                   MudkipsPlayer playerToTeleport = getMudkipsPlayer(matchPlayer(args[0]).getName());
                   if(playerToTeleport != null) {
                     int x = 0, y = 0, z = 0;
@@ -714,12 +667,12 @@ public class Mudkips extends JavaPlugin {
           }
           }
         } else if(rawCommand.equals("locset")) {
-          if(askPermission(sender, "mudkips.teleport.loc.set", false, true, "You are not authorized to use the /locset command!")) {
+          if(permissionHandler.askPermission(sender, "mudkips.teleport.loc.set", false, true, "You are not authorized to use the /locset command!")) {
             if(args.length == 1 && pSender != null) {
               Location loc = pSender.getLocation();
               loc.setY(loc.getY()+1);
               if("spawn".equalsIgnoreCase(args[0])) {
-                if(askPermission(sender, "mudkips.teleport.loc.setspawn", false, true, "You are not authorized to use the /locset command for setting spawn!")) {
+                if(permissionHandler.askPermission(sender, "mudkips.teleport.loc.setspawn", false, true, "You are not authorized to use the /locset command for setting spawn!")) {
                   pSender.getWorld().setSpawnLocation(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
                 }
               } else {
@@ -732,7 +685,7 @@ public class Mudkips extends JavaPlugin {
         } else if(rawCommand.indexOf("me") == 0) {
           if(pSender != null) {
             if(args.length > 0) {
-              if(askPermission(sender, "mudkips.chat.me", true, true, ChatColor.RED + "You are not authorized to use the /me command!")) {
+              if(permissionHandler.askPermission(sender, "mudkips.chat.me", true, true, ChatColor.RED + "You are not authorized to use the /me command!")) {
                 chatObj.playerChat(pSender, Chat.Type.RPG, args);
               }
             } else {
@@ -745,7 +698,7 @@ public class Mudkips extends JavaPlugin {
         else if(rawCommand.indexOf("msg") == 0) {
           if(pSender != null) {
             if(args.length >= 2) {
-              if(askPermission(sender, "mudkips.chat.msg", true, true, ChatColor.RED + "You are not authorized to use the /msg command!"))
+              if(permissionHandler.askPermission(sender, "mudkips.chat.msg", true, true, ChatColor.RED + "You are not authorized to use the /msg command!"))
                 chatObj.playerChat(pSender, Chat.Type.MESSAGE, args);
             } else {
                  pSender.sendMessage(ChatColor.RED + "Not enough parameters, receiver and message required.");
@@ -757,7 +710,7 @@ public class Mudkips extends JavaPlugin {
          if(pSender != null) {
               MudkipsPlayer mP = playerProvider.get(pSender);
            if(args.length > 0) {
-             if(askPermission(sender, "mudkips.chat.pmsg", true, true, ChatColor.RED + "You are not authorized to use the /pmsg command!"))
+             if(permissionHandler.askPermission(sender, "mudkips.chat.pmsg", true, true, ChatColor.RED + "You are not authorized to use the /pmsg command!"))
                chatObj.playerChat(pSender, Chat.Type.MESSAGE_PERSIST, args);
            } else {
              if(mP != null) {
@@ -775,7 +728,7 @@ public class Mudkips extends JavaPlugin {
            sender.sendMessage(ChatColor.RED + "lulz, unexpected usage of pmsg Command.");
          }
       } else if(rawCommand.indexOf("weather") == 0) { //ugh this is ugly, we should use commands /rain and /thunder instead
-         if(askPermission(sender, "mudkips.weather", false, true, ChatColor.RED + "You are not authorized to use the /weather command!")) { //pSender == null || pSender.isOp()
+         if(permissionHandler.askPermission(sender, "mudkips.weather", false, true, ChatColor.RED + "You are not authorized to use the /weather command!")) { //pSender == null || pSender.isOp()
            //Just inform about the weather
            if(args.length == 0) {
              //It's a player
@@ -874,7 +827,7 @@ public class Mudkips extends JavaPlugin {
        else if(rawCommand.equalsIgnoreCase("w") || rawCommand.equalsIgnoreCase("whisper")) {
           if(pSender != null) {
             if(args.length > 0)
-              if(askPermission(sender, "mudkips.chat.whisper", true, true, ChatColor.RED + "You are not authorized to whisper!"))
+              if(permissionHandler.askPermission(sender, "mudkips.chat.whisper", true, true, ChatColor.RED + "You are not authorized to whisper!"))
                 chatObj.playerChat(pSender, Chat.Type.WHISPER, args);
              else
               pSender.sendMessage(ChatColor.RED + "You did not whisper anything.");
@@ -886,7 +839,7 @@ public class Mudkips extends JavaPlugin {
        else if(rawCommand.indexOf("shout") == 0 || rawCommand.equalsIgnoreCase("s")) {
            if(pSender != null) {
              if(args.length > 0)
-               if(askPermission(sender, "mudkips.chat.shout", true, true, ChatColor.RED + "You are not authorized to shout!"))
+               if(permissionHandler.askPermission(sender, "mudkips.chat.shout", true, true, ChatColor.RED + "You are not authorized to shout!"))
                  chatObj.playerChat(pSender, Chat.Type.SHOUT, args);
               else
                pSender.sendMessage(ChatColor.RED + "You did not shout anything.");
@@ -897,7 +850,7 @@ public class Mudkips extends JavaPlugin {
        else if(rawCommand.equalsIgnoreCase("announce")) {
          if(pSender != null) {
            if(args.length > 0) {
-             if(askPermission(sender, "mudkips.announce", false, true, ChatColor.RED + "You are not authorized to use the /announce command!"))
+             if(permissionHandler.askPermission(sender, "mudkips.announce", false, true, ChatColor.RED + "You are not authorized to use the /announce command!"))
                chatObj.playerChat(pSender, Chat.Type.ANNOUNCE, args);
            } else {
              pSender.sendMessage(ChatColor.RED + "You did not announce anything.");
@@ -906,7 +859,7 @@ public class Mudkips extends JavaPlugin {
            chatObj.consoleChat(sender, Chat.Type.ANNOUNCE, args);
          }
        } else if(rawCommand.equalsIgnoreCase("info")) {
-         if(askPermission(sender, "mudkips.info", true, true, ChatColor.RED + "You are not authorized to use the /info command!")) {
+         if(permissionHandler.askPermission(sender, "mudkips.info", true, true, ChatColor.RED + "You are not authorized to use the /info command!")) {
            String playerName = null;
            if(args.length < 1) {
              if(pSender != null) {
@@ -933,13 +886,13 @@ public class Mudkips extends JavaPlugin {
                } else {
                  buf.append(mPlayerInfo.getName());
                }
-               if(hasPermission(sender, "mudkips.info.ip", false, true))
+               if(permissionHandler.hasPermission(sender, "mudkips.info.ip", false, true))
                  buf.append("[" + mPlayerInfo.getPlayer().getAddress().getHostName() + "]");
                buf.append("\n");
-               if(hasPermission(sender, "mudkips.info.afk", true, true))
+               if(permissionHandler.hasPermission(sender, "mudkips.info.afk", true, true))
                  if(mPlayerInfo.isAfk())
                    buf.append(this.afkNotification(mPlayerInfo) + "\n" + ChatColor.WHITE);
-               if(hasPermission(sender, "mudkips.info.proximity", true, true)) {
+               if(permissionHandler.hasPermission(sender, "mudkips.info.proximity", true, true)) {
                  if(pSender != null && !pSender.getName().equals(mPlayerInfo.getName())) {
                    if(!pSender.getLocation().getWorld().getName().equals(mPlayerInfo.getLocation().getWorld().getName())) {
                      buf.append("Is in another world.\n");
@@ -959,7 +912,7 @@ public class Mudkips extends JavaPlugin {
                    buf.append("\n");
                  }
                }
-               if(hasPermission(sender, "mudkips.info.pvp", true, true)) {
+               if(permissionHandler.hasPermission(sender, "mudkips.info.pvp", true, true)) {
                  if(mPlayerInfo.isPvpEnabled()) {
                    buf.append("Has PvP enabled.\n");
                  } else {
@@ -969,14 +922,14 @@ public class Mudkips extends JavaPlugin {
                if(mPlayerInfo.isJailed()) {
                  buf.append("Is jailed for " + StringUtil.describeDuration(mPlayerInfo.getJailedForDuration(), "en") + ".\n");
                }
-               if(hasPermission(sender, "mudkips.info.stats.death", true, true)) {
+               if(permissionHandler.hasPermission(sender, "mudkips.info.stats.death", true, true)) {
                  if(mPlayerInfo.getTimesDied() < 1) {
                    buf.append("Never died.\n");
                  } else {
                    buf.append("Died " + mPlayerInfo.getTimesDied() + " times.\n");
                  }
                }
-               if(hasPermission(sender, "mudkips.info.stats.login", true, true)) {
+               if(permissionHandler.hasPermission(sender, "mudkips.info.stats.login", true, true)) {
                  double duration = (mPlayerInfo.getPlayer().getWorld().getFullTime()-mPlayerInfo.getInitTime())/24000.00;
                  duration *= 100;
                  duration = (int) duration;
@@ -1005,7 +958,7 @@ public class Mudkips extends JavaPlugin {
        }
        else if(rawCommand.equals("say")) {
          if(pSender != null) {
-           if(askPermission(sender, "mudkips.chat.say", true, true, ChatColor.RED + "You are not authorized to say anything!"))
+           if(permissionHandler.askPermission(sender, "mudkips.chat.say", true, true, ChatColor.RED + "You are not authorized to say anything!"))
              chatObj.playerChat(pSender, Chat.Type.SAY, args);
          } else if(sender.isOp()) { // From Console
            chatObj.consoleChat(sender, Chat.Type.SAY, args);
@@ -1013,7 +966,7 @@ public class Mudkips extends JavaPlugin {
        }
        else if(rawCommand.equals("spawn")) {
          if(pSender != null) {
-           if(askPermission(sender, "mudkips.spawn", true, true, ChatColor.RED + "You are not authorized to use the /spawn command.")) {
+           if(permissionHandler.askPermission(sender, "mudkips.spawn", true, true, ChatColor.RED + "You are not authorized to use the /spawn command.")) {
              if(mPlayer.fightCooldownElapsed()) {
                if(!mPlayer.isJailed()) {
                  Location targetLoc = mPlayer.getHomeBed();
@@ -1050,7 +1003,7 @@ public class Mudkips extends JavaPlugin {
            mPlayer.sendMessage(ChatColor.YELLOW+"Unfortunately that feature is not yet available for users, only from console, poke me, "+ChatColor.AQUA+"Quimoniz"+ChatColor.YELLOW+", to be less lazy!");
            //ToDo: Do some stuff, actually, add the rename request to a queue to be confirmed by a moderator/admin, to avoid names like "cunt", "dick", or such stuff which can not be filtered like "5uck-my-d1ck"
            //mPlayer -> RenameRequest(concatenate(args,"-",0))
-           //if(askPermission(sender, "mudkips.rename.invoke", true, true, ChatColor.RED + "You are not authorized to rename")) {
+           //if(permissionHandler.askPermission(sender, "mudkips.rename.invoke", true, true, ChatColor.RED + "You are not authorized to rename")) {
              //mPlayer.renameRequest(concatenate(args,"-",0));
            //}
          } else if(sender.isOp()) {// Server is renaming a player
@@ -1060,7 +1013,7 @@ public class Mudkips extends JavaPlugin {
            }
          }
        } else if(rawCommand.equals("mob")) {
-         if(askPermission(sender, "mudkips.mob", false, true, ChatColor.RED + "You may not spawn mobs!")) {
+         if(permissionHandler.askPermission(sender, "mudkips.mob", false, true, ChatColor.RED + "You may not spawn mobs!")) {
            if(args.length > 0) {
              String mobName = args[0];
              final int MAX_COUNT = 50;
@@ -1213,7 +1166,7 @@ public class Mudkips extends JavaPlugin {
          }
        }
        else if(rawCommand.equals("slap")) {
-         if(askPermission(sender, "mudkips.slaponce", false, true, ChatColor.RED + "You may only get slapped!")) {
+         if(permissionHandler.askPermission(sender, "mudkips.slaponce", false, true, ChatColor.RED + "You may only get slapped!")) {
            if(args.length > 0) {
              Player matchedReceiver = matchPlayer(args[0]);
              if(matchedReceiver != null) {
@@ -1232,7 +1185,7 @@ public class Mudkips extends JavaPlugin {
          }
        }
        else if(rawCommand.equals("slappy")) {
-         if(askPermission(sender, "mudkips.slappy", false, true, ChatColor.RED + "You may only get slapped!")) {
+         if(permissionHandler.askPermission(sender, "mudkips.slappy", false, true, ChatColor.RED + "You may only get slapped!")) {
            if(args.length > 0) {
              Player matchedReceiver = matchPlayer(args[0]);
              if(matchedReceiver != null) {
@@ -1255,7 +1208,7 @@ public class Mudkips extends JavaPlugin {
          }
        }
        else if(rawCommand.equals("date")) {
-         if(askPermission(sender, "mudkips.date.get", true, true, ChatColor.RED + "You may not look up the current date!")) {
+         if(permissionHandler.askPermission(sender, "mudkips.date.get", true, true, ChatColor.RED + "You may not look up the current date!")) {
            sender.sendMessage(dateProvider.getDate(mPlayer.getWorld()));
          }
        }
@@ -1279,7 +1232,7 @@ public class Mudkips extends JavaPlugin {
            sender.sendMessage("No action can be performed");
          } else if(portalHandler == null){
            sender.sendMessage("PortalHandler is not loaded");
-         } else if(askPermission(sender, "mudkips.portal", false, true, ChatColor.RED + "You may not set a portal's destination.")) {
+         } else if(permissionHandler.askPermission(sender, "mudkips.portal", false, true, ChatColor.RED + "You may not set a portal's destination.")) {
            if(args.length >= 2) {
              boolean destinationIsWarp = false;
              String warpName = null;
@@ -1330,9 +1283,9 @@ public class Mudkips extends JavaPlugin {
          }
        } else if(rawCommand.equals("pvp")) {
          if(mPlayer != null) {
-           if(askPermission(sender, "mudkips.pvp", true, true, "You may not use this command.")) {
+           if(permissionHandler.askPermission(sender, "mudkips.pvp", true, true, "You may not use this command.")) {
              if(args.length > 0) {
-               if(askPermission(sender, "mudkips.pvp.change", true, true, "I am sorry, I can't let you do that.")) {
+               if(permissionHandler.askPermission(sender, "mudkips.pvp.change", true, true, "I am sorry, I can't let you do that.")) {
                  Boolean passedArgument = null;
                  if("on".equalsIgnoreCase(args[0]) || "true".equalsIgnoreCase(args[0]) || "1".equalsIgnoreCase(args[0]) || "enable".equalsIgnoreCase(args[0]) || "yes".equalsIgnoreCase(args[0])) {
                    passedArgument = new Boolean(true);
@@ -1356,12 +1309,12 @@ public class Mudkips extends JavaPlugin {
                  }
                }
              } else {
-               mPlayer.sendMessage(ChatColor.YELLOW + "PvP is " + (mPlayer.isPvpEnabled()?"enabled":"disabled") + " for you." + (hasPermission(sender, "mudkips.pvp.change", true, true)?("\n"+ChatColor.YELLOW+"You may "+(mPlayer.isPvpEnabled()?"disable it by typing \"/pvp off\"":"enable it by typing /pvp on")):""));
+               mPlayer.sendMessage(ChatColor.YELLOW + "PvP is " + (mPlayer.isPvpEnabled()?"enabled":"disabled") + " for you." + (permissionHandler.hasPermission(sender, "mudkips.pvp.change", true, true)?("\n"+ChatColor.YELLOW+"You may "+(mPlayer.isPvpEnabled()?"disable it by typing \"/pvp off\"":"enable it by typing /pvp on")):""));
              }
            }
          }
        } else if(rawCommand.equals("inventory")) {
-         if(askPermission(sender, "mudkips.inventory", false, true, "You may not use that command.")) {
+         if(permissionHandler.askPermission(sender, "mudkips.inventory", false, true, "You may not use that command.")) {
            if(args.length > 0) {
              Player p = this.matchPlayer(args[0]);
              if(p != null) {
@@ -1478,7 +1431,7 @@ public class Mudkips extends JavaPlugin {
            }
          }
        } else if(rawCommand.equalsIgnoreCase("vicinity")) {
-         if(askPermission(sender, "mudkips.vicinity", true, true, "You may not check if players are in your chat vicinity.")) {
+         if(permissionHandler.askPermission(sender, "mudkips.vicinity", true, true, "You may not check if players are in your chat vicinity.")) {
            if(sender.isOp() && !(sender instanceof org.bukkit.craftbukkit.entity.CraftPlayer)) {
              sender.sendMessage("Sorry, no vicinity command for you, console");
              return true;
@@ -1539,7 +1492,7 @@ public class Mudkips extends JavaPlugin {
              sender.sendMessage(ChatColor.RED + "No parameters given.");
              sender.sendMessage(ChatColor.YELLOW + "Usage: /kick <player>");
            }
-         } else if(askPermission(sender, "mudkips.kick", false, true, "You may not kick other players.")) {
+         } else if(permissionHandler.askPermission(sender, "mudkips.kick", false, true, "You may not kick other players.")) {
            if(args.length > 0) {
              Player p = matchPlayer(args[0]);
              if(mPlayer.kickCooldownElapsed()) {
@@ -1555,7 +1508,7 @@ public class Mudkips extends JavaPlugin {
        } else if(rawCommand.equalsIgnoreCase("tempban")) {
          if(myProps.getBooleanProperty("enable-bans")) {
            if(args.length >= 2) {
-             if(askPermission(sender, "mudkips.tempban", false, true, "You may not tempban.")) {
+             if(permissionHandler.askPermission(sender, "mudkips.tempban", false, true, "You may not tempban.")) {
                if(banHandler != null) {
                  String reason = "You are temporarily banned.";
                  String playerToBan = args[0];
@@ -1592,7 +1545,7 @@ public class Mudkips extends JavaPlugin {
          }
        } else if(rawCommand.equalsIgnoreCase("jail")) {
          if(myProps.getBooleanProperty("enable-jail")) {
-           if(askPermission(sender, "mudkips.jail", false, true, "You may not jail others!")) {
+           if(permissionHandler.askPermission(sender, "mudkips.jail", false, true, "You may not jail others!")) {
              if(args.length >= 1) {
                MudkipsPlayer mPlayerToJail = getMudkipsPlayer(args[0]);
                if(mPlayerToJail != null) {
@@ -1628,8 +1581,8 @@ public class Mudkips extends JavaPlugin {
            }
          } else {
            if(mPlayer != null) {
-             boolean killSelf = hasPermission(sender, "mudkips.kill.self", true, true),
-                     killOther = hasPermission(sender, "mudkips.kill.other", false, true); 
+             boolean killSelf = permissionHandler.hasPermission(sender, "mudkips.kill.self", true, true),
+                     killOther = permissionHandler.hasPermission(sender, "mudkips.kill.other", false, true); 
              if(!killOther && killSelf) {
                mPlayer.kill(mPlayer);
              } else {
@@ -1718,13 +1671,13 @@ public class Mudkips extends JavaPlugin {
    MudkipsPlayer mP = playerProvider.get(p);
    if( mP != null) {
      if(mP.inPrivateChat()) {
-       if(askPermission(p, "mudkips.chat.pmsg", true, true, ChatColor.RED + "You are not authorized to message others!"))
+       if(permissionHandler.askPermission(p, "mudkips.chat.pmsg", true, true, ChatColor.RED + "You are not authorized to message others!"))
          chatObj.playerChat(p, Chat.Type.PERSIST, new String[] {msg});
        e.setCancelled(true);
      }
    }
    if(!e.isCancelled()) {
-     if(askPermission(p, "mudkips.chat.say", true, true, ChatColor.RED + "You are not authorized to say anything!")) {
+     if(permissionHandler.askPermission(p, "mudkips.chat.say", true, true, ChatColor.RED + "You are not authorized to say anything!")) {
        chatObj.playerChat(p, Chat.Type.SAY, new String[] {msg});
      }
      e.setCancelled(true);

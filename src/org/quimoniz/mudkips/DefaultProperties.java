@@ -6,7 +6,7 @@ public class DefaultProperties {
   public static void writeDefaultProperties(PropertyManager props) {
     props.setIfNotSetProperty("motd", "Welcome %s");
     props.setIfNotSetProperty("afk-return-message-duration", "" + (1000 * 60 * 1));
-    props.setIfNotSetProperty("afk-return-message", ChatColor.GRAY + "is back");
+    props.setIfNotSetProperty("afk-return-message", ChatColor.GRAY + "%s is back");
     props.setIfNotSetProperty("help", ChatColor.WHITE + "Mudkips Plugin Commands:\n"
     		                                                 + ChatColor.BLACK + "+ " + ChatColor.YELLOW + "/afk <message>\n  " + ChatColor.AQUA + "Toggles afk status\n"
     		                                                 + ChatColor.BLACK + "+ " + ChatColor.YELLOW + "/playerlist\n  " + ChatColor.AQUA + "Prints a list of players being online\n"
@@ -61,7 +61,7 @@ public class DefaultProperties {
     props.setIfNotSetProperty("portals-file", "portals.csv");
     props.setIfNotSetProperty("travel-with-equipment", "false");
     
-    props.setIfNotSetProperty("use-permissions", "true");
+    props.setIfNotSetProperty("permissions", "null");
     
     props.setIfNotSetProperty("protect-obsidian", "true");
     
