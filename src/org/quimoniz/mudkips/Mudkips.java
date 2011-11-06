@@ -1752,9 +1752,11 @@ public class Mudkips extends JavaPlugin {
   public Player matchPlayer(String playerName) {
     String playerNameLC = playerName.toLowerCase();
     java.util.List<Player> playerList = this.getServer().matchPlayer(playerName);
+    //TODO: add algorithm, move match Player to MudkipsPlayerProvider 
     if(playerList.size() > 0) {
       for(Player pMatch : playerList) {
-        if(pMatch.getName().toLowerCase().equals(playerNameLC) || (pMatch.getName().toLowerCase().indexOf(playerNameLC) == 0 && ((pMatch.getName().length()*0.2) < playerName.length()) && (playerName.length() >= 2))) {
+        String matchLC = pMatch.getName().toLowerCase(); 
+        if(matchLC.equals(playerNameLC) || (matchLC.indexOf(playerNameLC) == 0 && ((matchLC.length()*0.15) < playerName.length()) && (playerName.length() >= 2))) {
           return pMatch;
         }
       }
