@@ -1,0 +1,8 @@
+# lulz header
+general:
+  motd: "Welcome %s"
+  portals-file: "portals.csv"
+chat:
+  chat-server-name: "SERVER"
+interact:
+  protect-obsidian: true

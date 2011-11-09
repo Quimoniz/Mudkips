@@ -55,7 +55,7 @@ public class Chat implements Closeable {
         logChat(msg , null);
       return true;
 	} else if(chatType == Type.MESSAGE) {
-      MudkipsPlayer mudkipsReceiver = pluginMain.getMudkipsPlayer(pluginMain.matchPlayer(message[0]).getName());
+      MudkipsPlayer mudkipsReceiver = pluginMain.getMudkipsPlayer(pluginMain.playerProvider.matchPlayer(message[0]).getName());
       if(mudkipsReceiver != null) {
     	String msg = StringUtil.replaceAll(mudkipsProps.getProperty("message-receiver"), new char[] {'s', 'r', 'm'}, new String[] {mudkipsProps.getProperty("chat-server-name"), mudkipsReceiver.displayName(), StringUtil.concatenate(message, " ", 0)});
     	mudkipsReceiver.sendMessage(msg);
@@ -63,7 +63,7 @@ public class Chat implements Closeable {
         logChat( msg, null);
         return true;
       } else {
-    	Player receiver = pluginMain.matchPlayer(message[0]);
+    	Player receiver = pluginMain.playerProvider.matchPlayer(message[0]);
     	if(receiver != null) {
     	  String msg = StringUtil.replaceAll(mudkipsProps.getProperty("message-receiver"), new char[] {'s', 'r', 'm'}, new String[] {mudkipsProps.getProperty("chat-server-name"), receiver.getName(), StringUtil.concatenate(message, " ", 0)});
     	  receiver.sendMessage(msg);
@@ -115,9 +115,9 @@ public class Chat implements Closeable {
     }
     if(chatType == Type.MESSAGE) {
       //ToDo: Handle a possible NullPointerException in this following line
-      Player pReceiver = pluginMain.matchPlayer(message[0]);
+      Player pReceiver = pluginMain.playerProvider.matchPlayer(message[0]);
       if(pReceiver != null) {
-        MudkipsPlayer mudkipsReceiver = pluginMain.getMudkipsPlayer(pluginMain.matchPlayer(message[0]).getName());
+        MudkipsPlayer mudkipsReceiver = pluginMain.getMudkipsPlayer(pluginMain.playerProvider.matchPlayer(message[0]).getName());
         if(mudkipsReceiver != null) {
           if(mudkipsReceiver.isAfk())
             mPlayer.sendMessage(afkNotification(mudkipsReceiver));
@@ -138,7 +138,7 @@ public class Chat implements Closeable {
         }
       }
     } else if(chatType == Type.MESSAGE_PERSIST) {
-        Player pReceiver = pluginMain.matchPlayer(message[0]);
+        Player pReceiver = pluginMain.playerProvider.matchPlayer(message[0]);
         if(pReceiver != null) {
           MudkipsPlayer mudkipsReceiver = pluginMain.getMudkipsPlayer(pReceiver.getName());
           mPlayer.setPrivateChatPartner(mudkipsReceiver.getName());

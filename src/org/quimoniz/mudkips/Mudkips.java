@@ -379,6 +379,9 @@ public class Mudkips extends JavaPlugin {
         errorHandler.logException(exc);
       }
       saveProperties();
+      
+      ConfigManager configManager = new ConfigManager(this.getDataFolder(), this.getServer());
+      
     }
 
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -435,7 +438,7 @@ public class Mudkips extends JavaPlugin {
         if(pSender != null) {
              if(permissionHandler.askPermission(pSender, "mudkips.teleport.to", false, true, ChatColor.RED + "You are not authorized to use the /pto command.")) {
                if(args.length >= 1) {
-                 Player player = matchPlayer(args[0]);
+                 Player player = playerProvider.matchPlayer(args[0]);
                  if(player != null) {
                    Location targetLocation = player.getLocation();
                    if(args.length >= 2) {
@@ -460,7 +463,7 @@ public class Mudkips extends JavaPlugin {
         if(pSender != null) {
              if(permissionHandler.askPermission(pSender, "mudkips.teleport.here", false, true, ChatColor.RED + "You are not authorized to use the /phere command.")) {
                if(args.length >= 1) {
-                 Player player = matchPlayer(args[0]);
+                 Player player = playerProvider.matchPlayer(args[0]);
                  MudkipsPlayer mPlayerTo = this.getMudkipsPlayer(player.getName());
                  if(player != null && mPlayerTo != null) {
                    Location targetLocation = pSender.getLocation();
@@ -487,8 +490,8 @@ public class Mudkips extends JavaPlugin {
       } else if( rawCommand.equals("tp")) {
         if(permissionHandler.askPermission(sender, "mudkips.teleport.tp", false, true, ChatColor.RED + "You are not authorized to use the /tp command.")) {
              if(args.length >= 2) {
-               Player playerB = matchPlayer(args[1]);
-               Player playerA = matchPlayer(args[0]);
+               Player playerB = playerProvider.matchPlayer(args[1]);
+               Player playerA = playerProvider.matchPlayer(args[0]);
                if(playerA != null) {
                  MudkipsPlayer mPlayerA = getMudkipsPlayer(playerA.getName());
                  if(mPlayerA != null && playerB != null) {
@@ -564,7 +567,7 @@ public class Mudkips extends JavaPlugin {
               }
               if(myProps.getBooleanProperty("enable-warps")) {
                 if(permissionHandler.askPermission(sender, "mudkips.teleport.loc.playerwarp",false,true, ChatColor.RED + "You are not authorized to use the /loc command in that manner.")) {
-                  MudkipsPlayer playerToTeleport = getMudkipsPlayer(matchPlayer(args[0]).getName());
+                  MudkipsPlayer playerToTeleport = getMudkipsPlayer(playerProvider.matchPlayer(args[0]).getName());
                   if(playerToTeleport != null) {
                     Location targetLoc;
                     if("spawn".equalsIgnoreCase(args[1])) {
@@ -607,7 +610,7 @@ public class Mudkips extends JavaPlugin {
               } else {
                 if(StringUtil.isInteger(args[1]) && StringUtil.isInteger(args[2])) {
                   if(permissionHandler.askPermission(sender, "mudkips.teleport.loc.playerpos",false,true, ChatColor.RED + "You are not authorized to use the /loc command in that manner.")) {
-                    MudkipsPlayer playerToTeleport = getMudkipsPlayer(matchPlayer(args[0]).getName());
+                    MudkipsPlayer playerToTeleport = getMudkipsPlayer(playerProvider.matchPlayer(args[0]).getName());
                     if(playerToTeleport != null) {
                       int x = 0, z = 0;
                       boolean parsingSuccess = false;
@@ -636,7 +639,7 @@ public class Mudkips extends JavaPlugin {
             } else if(args.length == 4) {
               if(StringUtil.isInteger(args[1]) && StringUtil.isInteger(args[2]) && StringUtil.isInteger(args[3])) {
                 if(permissionHandler.askPermission(sender, "mudkips.teleport.loc.playerpos",false,true, ChatColor.RED + "You are not authorized to use the /loc command in that manner.")) {
-                  MudkipsPlayer playerToTeleport = getMudkipsPlayer(matchPlayer(args[0]).getName());
+                  MudkipsPlayer playerToTeleport = getMudkipsPlayer(playerProvider.matchPlayer(args[0]).getName());
                   if(playerToTeleport != null) {
                     int x = 0, y = 0, z = 0;
                     boolean parsingSuccess = false;
@@ -869,7 +872,7 @@ public class Mudkips extends JavaPlugin {
                return false;
              }
            } else {
-             Player p = matchPlayer(args[0]);
+             Player p = playerProvider.matchPlayer(args[0]);
              if(p != null)
                playerName = p.getName();
            }
@@ -1008,7 +1011,7 @@ public class Mudkips extends JavaPlugin {
            //}
          } else if(sender.isOp()) {// Server is renaming a player
            if(args.length >= 2) {
-             MudkipsPlayer mPlayerToRename = getMudkipsPlayer(matchPlayer(args[0]).getName());
+             MudkipsPlayer mPlayerToRename = getMudkipsPlayer(playerProvider.matchPlayer(args[0]).getName());
              mPlayerToRename.setAlterName(StringUtil.concatenate(args, " ", 1));
            }
          }
@@ -1063,13 +1066,13 @@ public class Mudkips extends JavaPlugin {
                }
              }
              if(playerName != null) {
-               Player p = this.matchPlayer(playerName);
+               Player p = playerProvider.matchPlayer(playerName);
                if(p != null) {
                  loc = p.getLocation();
                }
              }
              if(playerTarget != null) {
-               pTarget = this.matchPlayer(playerTarget);
+               pTarget = playerProvider.matchPlayer(playerTarget);
              }
              if(warpName != null) {
                loc = this.warpHandler.getWarp(warpName);
@@ -1168,7 +1171,7 @@ public class Mudkips extends JavaPlugin {
        else if(rawCommand.equals("slap")) {
          if(permissionHandler.askPermission(sender, "mudkips.slaponce", false, true, ChatColor.RED + "You may only get slapped!")) {
            if(args.length > 0) {
-             Player matchedReceiver = matchPlayer(args[0]);
+             Player matchedReceiver = playerProvider.matchPlayer(args[0]);
              if(matchedReceiver != null) {
                MudkipsPlayer mToSlap = this.getMudkipsPlayer(matchedReceiver.getName());
                if(mToSlap != null) {
@@ -1187,7 +1190,7 @@ public class Mudkips extends JavaPlugin {
        else if(rawCommand.equals("slappy")) {
          if(permissionHandler.askPermission(sender, "mudkips.slappy", false, true, ChatColor.RED + "You may only get slapped!")) {
            if(args.length > 0) {
-             Player matchedReceiver = matchPlayer(args[0]);
+             Player matchedReceiver = playerProvider.matchPlayer(args[0]);
              if(matchedReceiver != null) {
                MudkipsPlayer mToSlap = this.getMudkipsPlayer(matchedReceiver.getName());
                if(mToSlap != null) {
@@ -1217,7 +1220,7 @@ public class Mudkips extends JavaPlugin {
            if(args.length > 0) {
              if("fix".equalsIgnoreCase(args[0])) {
                if(args.length > 1) {
-                 String player = matchPlayer(args[1]).getName();
+                 String player = playerProvider.matchPlayer(args[1]).getName();
                  this.playerProvider.fix(player);
                }
              }
@@ -1316,7 +1319,7 @@ public class Mudkips extends JavaPlugin {
        } else if(rawCommand.equals("inventory")) {
          if(permissionHandler.askPermission(sender, "mudkips.inventory", false, true, "You may not use that command.")) {
            if(args.length > 0) {
-             Player p = this.matchPlayer(args[0]);
+             Player p = playerProvider.matchPlayer(args[0]);
              if(p != null) {
                ItemStack[] inventory = new ItemStack[36];
                //ArrayList<ItemStack> list = new ArrayList<ItemStack>(36);
@@ -1486,7 +1489,7 @@ public class Mudkips extends JavaPlugin {
        } else if(rawCommand.equalsIgnoreCase("kick")) {
          if(isConsole) {
            if(args.length > 0) {
-             Player p = matchPlayer(args[0]);
+             Player p = playerProvider.matchPlayer(args[0]);
              p.kickPlayer(StringUtil.concatenate(args, " ", 1));
            } else {
              sender.sendMessage(ChatColor.RED + "No parameters given.");
@@ -1494,7 +1497,7 @@ public class Mudkips extends JavaPlugin {
            }
          } else if(permissionHandler.askPermission(sender, "mudkips.kick", false, true, "You may not kick other players.")) {
            if(args.length > 0) {
-             Player p = matchPlayer(args[0]);
+             Player p = playerProvider.matchPlayer(args[0]);
              if(mPlayer.kickCooldownElapsed()) {
                p.kickPlayer(StringUtil.concatenate(args, " ", 1));
                mPlayer.kicked();
@@ -1746,30 +1749,6 @@ public class Mudkips extends JavaPlugin {
     } catch(NullPointerException exc) {
       this.getServer().getLogger().log(Level.WARNING, "NullPointerException while sending MOTD!");
       exc.printStackTrace();
-    }
-  }
-  //Suggestion by winterschwert: Make it so, that abbreviation is only allowed for the beginning of the name, so that 'schwert' wouldnt trigger on player 'winterschwert', but 'winter' would
-  public Player matchPlayer(String playerName) {
-    String playerNameLC = playerName.toLowerCase();
-    java.util.List<Player> playerList = this.getServer().matchPlayer(playerName);
-    //TODO: add algorithm, move match Player to MudkipsPlayerProvider 
-    if(playerList.size() > 0) {
-      for(Player pMatch : playerList) {
-        String matchLC = pMatch.getName().toLowerCase(); 
-        if(matchLC.equals(playerNameLC) || (matchLC.indexOf(playerNameLC) == 0 && ((matchLC.length()*0.15) < playerName.length()) && (playerName.length() >= 2))) {
-          return pMatch;
-        }
-      }
-    }
-    if(playerProvider.has(playerName)) {
-      return playerProvider.get(playerName).getPlayer();
-    } else {
-      MudkipsPlayer mPlayer = playerProvider.getByAlterName(playerName);
-      if(mPlayer != null) {
-        return mPlayer.getPlayer();
-      } else {
-        return null;
-      }
     }
   }
   public boolean setWeather(World worldToChangeWeatherIn, String param, String paramThunder, CommandSender sender) {

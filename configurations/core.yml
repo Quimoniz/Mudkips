@@ -1,0 +1,14 @@
+permissions: "null"
+kick-cooldown: 60
+ban-cooldown: 300
+enable-bans: true
+bans-file: bans.properties
+enable-jail: true
+protect-jail-break: true
+protect-jail-place: true
+protect-jail-pickup: true
+protect-jail-interact: [23,25,54,58,61,62,64,71,96]
+portals-file: portals.csv
+enable-portals: true
+enable-warps: true
+warps-file: warps.prop

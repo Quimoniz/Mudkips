@@ -111,6 +111,30 @@ public class MudkipsPlayerProvider implements Runnable,Closeable {
   public boolean has(Player player) {
     return has(player.getName());
   }
+  //Suggestion by winterschwert: Make it so, that abbreviation is only allowed for the beginning of the name, so that 'schwert' wouldnt trigger on player 'winterschwert', but 'winter' would
+  public Player matchPlayer(String playerName) {
+    String playerNameLC = playerName.toLowerCase();
+    java.util.List<Player> playerList = server.matchPlayer(playerName);
+    //TODO: add algorithm, move match Player to MudkipsPlayerProvider 
+    if(playerList.size() > 0) {
+      for(Player pMatch : playerList) {
+        String matchLC = pMatch.getName().toLowerCase(); 
+        if(matchLC.equals(playerNameLC) || (matchLC.indexOf(playerNameLC) == 0 && ((matchLC.length()*0.15) < playerName.length()) && (playerName.length() >= 2))) {
+          return pMatch;
+        }
+      }
+    }
+    if(this.has(playerName)) {
+      return this.get(playerName).getPlayer();
+    } else {
+      MudkipsPlayer mPlayer = this.getByAlterName(playerName);
+      if(mPlayer != null) {
+        return mPlayer.getPlayer();
+      } else {
+        return null;
+      }
+    }
+  }
   public void start() {
     synchronized(running) {
       if(threadObject == null || running==false) {
