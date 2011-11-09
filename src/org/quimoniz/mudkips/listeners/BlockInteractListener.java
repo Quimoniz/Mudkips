@@ -1,4 +1,4 @@
-package org.quimoniz.mudkips;
+package org.quimoniz.mudkips.listeners;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockListener;
@@ -11,6 +11,8 @@ import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.block.Block;
 import org.bukkit.event.block.BlockSpreadEvent;
+import org.quimoniz.mudkips.Mudkips;
+import org.quimoniz.mudkips.player.MudkipsPlayer;
 
 public class BlockInteractListener extends BlockListener {
   private Mudkips mudkips;

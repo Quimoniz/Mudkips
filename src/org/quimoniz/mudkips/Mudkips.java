@@ -1,5 +1,6 @@
 package org.quimoniz.mudkips;
 
+
 import org.bukkit.event.Event;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.PluginManager;
@@ -30,6 +31,12 @@ import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Creature;
 import org.bukkit.block.Block;
 import org.bukkit.event.player.PlayerPortalEvent;
+import org.quimoniz.mudkips.listeners.BlockInteractListener;
+import org.quimoniz.mudkips.listeners.DelayedLoginEvent;
+import org.quimoniz.mudkips.listeners.MEntityListener;
+import org.quimoniz.mudkips.listeners.MPlayerListener;
+import org.quimoniz.mudkips.player.MudkipsPlayer;
+import org.quimoniz.mudkips.player.MudkipsPlayerProvider;
 import org.quimoniz.mudkips.util.*;
 import org.bukkit.inventory.ItemStack;
 
@@ -1839,7 +1846,7 @@ public class Mudkips extends JavaPlugin {
     }
   }
 
-  protected MudkipsPlayerProvider getPlayerProvider() {
+  public MudkipsPlayerProvider getPlayerProvider() {
     return this.playerProvider;
   }
 }

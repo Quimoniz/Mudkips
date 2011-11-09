@@ -1,4 +1,4 @@
-package org.quimoniz.mudkips;
+package org.quimoniz.mudkips.listeners;
 
 import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerListener;
@@ -11,6 +11,9 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.quimoniz.mudkips.Mudkips;
+import org.quimoniz.mudkips.player.MudkipsPlayer;
+
 import java.util.HashSet;
 
 public class MPlayerListener extends PlayerListener {
@@ -18,7 +21,7 @@ public class MPlayerListener extends PlayerListener {
   private boolean blockJailPickup = false;
   private HashSet<Integer> blockJailInteractIds = null;
   private boolean blockAllJailInteract = false;
-  MPlayerListener(Mudkips pluginMain) {
+  public MPlayerListener(Mudkips pluginMain) {
 	this.pluginMain = pluginMain;
   }// note: Join is after successfull login (LoginEvent)
   @Override public void onPlayerJoin(PlayerJoinEvent e) {

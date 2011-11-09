@@ -1,6 +1,7 @@
-package org.quimoniz.mudkips;
+package org.quimoniz.mudkips.listeners;
 
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.quimoniz.mudkips.Mudkips;
 
 public class DelayedLoginEvent implements Runnable {
 	private Mudkips mainPlugin;

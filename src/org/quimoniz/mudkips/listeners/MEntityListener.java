@@ -1,4 +1,4 @@
-package org.quimoniz.mudkips;
+package org.quimoniz.mudkips.listeners;
 
 import org.bukkit.event.entity.EntityListener;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -10,6 +10,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.ChatColor;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.quimoniz.mudkips.Mudkips;
 
 public class MEntityListener extends EntityListener {
   private Mudkips mudkips;

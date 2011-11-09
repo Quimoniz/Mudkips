@@ -1,7 +1,8 @@
-package org.quimoniz.mudkips;
+package org.quimoniz.mudkips.player;
 
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
+
 
 public class PlayerTask implements Delayed {
   private long timeInNanoseconds = 0;

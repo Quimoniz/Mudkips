@@ -4,6 +4,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.quimoniz.mudkips.player.MudkipsPlayer;
 import org.quimoniz.mudkips.util.WorldUtil;
 import org.quimoniz.wigglytuff.ReaderStreamParser;
 import org.bukkit.Server;

@@ -9,6 +9,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Closeable;
 import java.util.logging.Logger;
+
+import org.quimoniz.mudkips.player.MudkipsPlayer;
 import org.quimoniz.mudkips.util.*;
 
 public class Chat implements Closeable {

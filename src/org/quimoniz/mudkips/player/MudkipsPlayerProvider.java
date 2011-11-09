@@ -1,4 +1,4 @@
-package org.quimoniz.mudkips;
+package org.quimoniz.mudkips.player;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -7,6 +7,9 @@ import java.util.logging.Level;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
+import org.quimoniz.mudkips.Mudkips;
+import org.quimoniz.mudkips.player.PlayerTask.Type;
+
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.TimeUnit;
 import java.io.Closeable;

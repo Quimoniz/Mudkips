@@ -1,4 +1,4 @@
-package org.quimoniz.mudkips;
+package org.quimoniz.mudkips.player;
 
 
 import org.bukkit.entity.Player;
@@ -10,6 +10,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import org.quimoniz.mudkips.Mudkips;
 import org.quimoniz.mudkips.util.StringUtil;
 import org.quimoniz.mudkips.util.WorldUtil;
 import org.quimoniz.wigglytuff.EntityReadListener;
@@ -620,7 +621,7 @@ public class MudkipsPlayer implements Closeable{
     if(this.pObject == null) {
       this.pObject = serverObject.getPlayer(this.name);
       if(this.pObject == null) {
-        this.mudkipsMain.getPlayerProvider().playerQuit(this.name);
+        this.mudkipsMain.playerProvider.playerQuit(this.name);
         return false;
       }
     }

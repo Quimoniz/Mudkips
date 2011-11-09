@@ -7,6 +7,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.event.player.PlayerPortalEvent;
+import org.quimoniz.mudkips.player.MudkipsPlayer;
 
 import java.util.Iterator;
 import java.util.LinkedList;
