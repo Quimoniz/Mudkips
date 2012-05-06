@@ -5,6 +5,7 @@ import java.io.File;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.WorldCreator;
 import org.bukkit.Server;
 import org.bukkit.craftbukkit.CraftServer;
 import org.quimoniz.mudkips.Mudkips;
@@ -32,11 +33,7 @@ public class WorldUtil {
   }
   public World loadWorld(String worldName) {
     if(worldLoadable(worldName)) {
-      if(worldName.lastIndexOf("_nether") == (worldName.length()-"_nether".length())) {
-        return server.createWorld(worldName, org.bukkit.World.Environment.NETHER);
-      } else {
-        return server.createWorld(worldName, org.bukkit.World.Environment.NORMAL);
-      }
+      return server.createWorld(new WorldCreator(worldName));
     } else {
       return null;
     }

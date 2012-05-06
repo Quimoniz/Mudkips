@@ -1,7 +1,8 @@
 package org.quimoniz.mudkips.listeners;
 
 import org.bukkit.entity.Player;
-import org.bukkit.event.block.BlockListener;
+import org.bukkit.event.Listener;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.Material;
@@ -13,21 +14,27 @@ import org.bukkit.block.Block;
 import org.bukkit.event.block.BlockSpreadEvent;
 import org.quimoniz.mudkips.Mudkips;
 import org.quimoniz.mudkips.player.MudkipsPlayer;
+import org.bukkit.event.block.BlockEvent;
 
-public class BlockInteractListener extends BlockListener {
+public class BlockInteractListener implements Listener { 
   private Mudkips mudkips;
-  private boolean blockJailBreak = false, blockJailPlace = false;
+  //oh yes, it could be done more efficiently with instead using a HashSet, and the simple occurence of a String value would determine if it was set to TRUE. However this is more nice, and HashMap performs very well, on average below 1/10 millisecond per put operation, maybe memory usage might be an issue with it..
+  //did it.. 
+  //well speaking of optimization, I could keep a count of loaded worlds, and save that, in order to make it on reload accessible for all the HashMap and HashSet initializations.. 
+  private HashSet<String> blockJailBreak = new HashSet<String>(), blockJailPlace = new HashSet<String>();
   private HashSet<Integer> blockFirePlace = null;
   private boolean blockFirePlacementCompletly = false;
   private HashSet<Integer> blockBurningIds = null;
   private boolean blockBurningCompletly = false;
-  private boolean tallGrassMakesGrass = false;
+  private HashSet<String> tallGrassMakesGrass = new HashSet<String>();
   public boolean blockIgniteWasRegistered = false;
   public boolean blockPlacementWasRegistered = false;
+  public boolean blockObsidianDigging = false;
   public BlockInteractListener(Mudkips mudkips) {
     this.mudkips = mudkips;
   }
-  @Override public void onBlockDamage(BlockDamageEvent e) {
+  //TODO: remove this obsolete method, breaking is checked with onBlockBreak 
+  @EventHandler public void onBlockDamage(BlockDamageEvent e) {
     if(e.isCancelled()) return;
 	if(e.getBlock().getType() == Material.OBSIDIAN) {
 	  Player p = e.getPlayer();
@@ -38,17 +45,19 @@ public class BlockInteractListener extends BlockListener {
 	  }
 	}
   }
-  @Override public void onBlockBreak(BlockBreakEvent e) {
+  @EventHandler public void onBlockBreak(BlockBreakEvent e) {
     if(e.isCancelled()) return;
-	if(e.getBlock().getType() == Material.OBSIDIAN) {
-	  Player p = e.getPlayer();
-	  if(p != null) {
-		if(p.getItemInHand().getType() != Material.DIAMOND_PICKAXE) {
-		  e.setCancelled(true);
-		}
+    if(blockObsidianDigging) {
+	  if(e.getBlock().getType() == Material.OBSIDIAN) {
+	    Player p = e.getPlayer();
+	    if(p != null) {
+		  if(p.getItemInHand().getType() != Material.DIAMOND_PICKAXE) {
+		    e.setCancelled(true);
+		  }
+	    }
 	  }
-	}
-    if(blockJailBreak) {
+    }
+    if(containsKey(blockJailBreak, e)) {
       MudkipsPlayer mPlayer = mudkips.getMudkipsPlayer(e.getPlayer().getName());
       if(mPlayer != null) {
         if(mPlayer.isJailed()) {
@@ -57,9 +66,9 @@ public class BlockInteractListener extends BlockListener {
       }
     }
   }
-  @Override public void onBlockPlace(BlockPlaceEvent e) {
+  @EventHandler public void onBlockPlace(BlockPlaceEvent e) {
     if(e.isCancelled()) return;
-    if(blockJailPlace) {
+    if(containsKey(blockJailPlace, e)) {
       MudkipsPlayer mPlayer = mudkips.getMudkipsPlayer(e.getPlayer().getName());
       if(mPlayer != null) {
         if(mPlayer.isJailed()) {
@@ -80,14 +89,14 @@ public class BlockInteractListener extends BlockListener {
 //        System.out.println("Fire is cancelled SPECIFICALLY");
         return;
       }
-    } else if(tallGrassMakesGrass && e.getBlockPlaced().getTypeId() == 31) {
+    } else if(e.getBlockPlaced().getTypeId() == 31 && containsKey(tallGrassMakesGrass, e)) {
       Block blockBelow = e.getBlockPlaced().getRelative(0, -1, 0);
       if(blockBelow != null && blockBelow.getTypeId() == 3) {
         blockBelow.setTypeId(2, true);
       }
     }
   }
-  @Override public void onBlockBurn(BlockBurnEvent e) {
+  @EventHandler public void onBlockBurn(BlockBurnEvent e) {
     if(blockBurningCompletly) {
       e.setCancelled(true);
     } else {
@@ -96,7 +105,7 @@ public class BlockInteractListener extends BlockListener {
       }
     }
   }
-  @Override public void onBlockIgnite(BlockIgniteEvent e) {
+  @EventHandler public void onBlockIgnite(BlockIgniteEvent e) {
 //    System.out.println(e.getCause()+" Ignition!");
     switch(e.getCause()) {
       case FLINT_AND_STEEL: //TODO: Actually stop fire placement according to blockFirePlace and blockFirePlacementCompletly
@@ -167,11 +176,11 @@ public class BlockInteractListener extends BlockListener {
     blocksAround[5] = centerBlock.getRelative( 0, 1, 0);
     return blocksAround;
   }
-  public void blockJailPlace(boolean watchIt) {
-    this.blockJailPlace = watchIt;
+  public void blockJailPlace(String worldName, boolean watchIt) {
+    if(watchIt) this.blockJailPlace.add(worldName);
   }
-  public void blockJailBreak(boolean watchIt) {
-    this.blockJailBreak = watchIt;
+  public void blockJailBreak(String worldName, boolean watchIt) {
+    if(watchIt) this.blockJailBreak.add(worldName);
   }
   public void blockFirePlace(java.util.List<Integer> blocksAgainst) {
     if(blocksAgainst != null) {
@@ -193,7 +202,12 @@ public class BlockInteractListener extends BlockListener {
   public void blockAllBurning(boolean blockCompletly) {
     blockBurningCompletly = blockCompletly;
   }
-  public void tallGrassMakesGrassBlock(boolean makes) {
-    tallGrassMakesGrass = makes;
+  public void tallGrassMakesGrassBlock(String worldName, boolean makes) {
+    if(makes) tallGrassMakesGrass.add(worldName);
+  }
+  private boolean containsKey(HashSet<String> worldNames, BlockEvent event) {
+    if(event == null || event.getBlock() == null || event.getBlock().getWorld() == null)
+      throw new IllegalArgumentException("Illegal BlockEvent, it has no associated World!");
+    return worldNames.contains(event.getBlock().getWorld().getName());
   }
 }

@@ -232,4 +232,29 @@ public class StringUtil {
       list.add(originString.substring(lastDelimPos));
     return list.toArray(new String[0]);
   }
+  public static String escapeFileName(String name) {
+    char [] otherCharacters = new char[] {'.','_','-'};
+    StringBuilder buf = new StringBuilder(name.length()+name.length()/2);
+    for(int i = 0; i < name.length(); i++) {
+      char curChar = name.charAt(i);
+      if((curChar>96 && curChar<123) || (curChar>64 && curChar<91) || (curChar>47 && curChar<57)) {
+        buf.append(curChar);
+      } else {
+        boolean matchedOtherCharacters = false;
+        for(int j = 0; j < otherCharacters.length; j++) {
+          if(curChar == otherCharacters[j]) {
+            matchedOtherCharacters = true;
+            break;
+          }
+        }
+        if(matchedOtherCharacters) {
+          buf.append(curChar);
+        } else {
+          buf.append('%');
+          buf.append(Integer.toString(curChar,16).toUpperCase());
+        }
+      }
+    }
+    return buf.toString();
+  }
 }

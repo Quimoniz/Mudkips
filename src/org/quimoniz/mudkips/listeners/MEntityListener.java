@@ -1,6 +1,7 @@
 package org.quimoniz.mudkips.listeners;
 
-import org.bukkit.event.entity.EntityListener;
+import org.bukkit.event.Listener;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
@@ -12,12 +13,12 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.quimoniz.mudkips.Mudkips;
 
-public class MEntityListener extends EntityListener {
+public class MEntityListener implements Listener {
   private Mudkips mudkips;
   public MEntityListener(Mudkips mudkips) {
     this.mudkips = mudkips;
   }
-  public void onEntityDamage(EntityDamageEvent event) {
+  @EventHandler public void onEntityDamage(EntityDamageEvent event) {
     if(event.getEntity() instanceof Player && event instanceof EntityDamageByEntityEvent) {
       Entity source = ((EntityDamageByEntityEvent) event).getDamager();
       if(source instanceof Player) {
@@ -26,7 +27,7 @@ public class MEntityListener extends EntityListener {
       }
     }
   }
-  public void onEntityDeath(EntityDeathEvent event) {
+  @EventHandler public void onEntityDeath(EntityDeathEvent event) {
     if(event.getEntity() instanceof Player && event instanceof PlayerDeathEvent) {
       mudkips.playerDied((PlayerDeathEvent) event);
     }

@@ -1,7 +1,8 @@
 package org.quimoniz.mudkips.listeners;
 
 import org.bukkit.event.player.PlayerBedEnterEvent;
-import org.bukkit.event.player.PlayerListener;
+import org.bukkit.event.Listener;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -16,39 +17,41 @@ import org.quimoniz.mudkips.player.MudkipsPlayer;
 
 import java.util.HashSet;
 
-public class MPlayerListener extends PlayerListener {
+public class MPlayerListener implements Listener {
   private Mudkips pluginMain;
   private boolean blockJailPickup = false;
   private HashSet<Integer> blockJailInteractIds = null;
   private boolean blockAllJailInteract = false;
+  public boolean listenPortalEvents = false;
+  public boolean listenPreloginEvents = false;
   public MPlayerListener(Mudkips pluginMain) {
 	this.pluginMain = pluginMain;
   }// note: Join is after successfull login (LoginEvent)
-  @Override public void onPlayerJoin(PlayerJoinEvent e) {
+  @EventHandler public void onPlayerJoin(PlayerJoinEvent e) {
 	pluginMain.playerJoin(e);
   }
-  @Override public void onPlayerChat(PlayerChatEvent e) {
+  @EventHandler public void onPlayerChat(PlayerChatEvent e) {
 	pluginMain.playerChat(e);
   }
-  @Override public void onPlayerQuit(PlayerQuitEvent e) {
+  @EventHandler public void onPlayerQuit(PlayerQuitEvent e) {
 	pluginMain.playerQuit(e);
   }
-  @Override public void onPlayerBedEnter(PlayerBedEnterEvent e) {
+  @EventHandler public void onPlayerBedEnter(PlayerBedEnterEvent e) {
     pluginMain.setHomeBed(e.getPlayer(),e.getBed().getLocation());
   }
-  @Override public void onPlayerPortal(PlayerPortalEvent e) {
+  @EventHandler public void onPlayerPortal(PlayerPortalEvent e) {
     pluginMain.portaling(e);
   }
-  @Override public void onPlayerPreLogin(PlayerPreLoginEvent e) {
+  @EventHandler public void onPlayerPreLogin(PlayerPreLoginEvent e) {
     pluginMain.playerPreLogin(e);
   }
-  @Override public void onPlayerTeleport(PlayerTeleportEvent e) {
+  @EventHandler public void onPlayerTeleport(PlayerTeleportEvent e) {
     pluginMain.playerTeleport(e);
   }
-  @Override public void onPlayerRespawn(PlayerRespawnEvent e) {
+  @EventHandler public void onPlayerRespawn(PlayerRespawnEvent e) {
     pluginMain.playerRespawn(e);
   }
-  @Override public void onPlayerPickupItem(PlayerPickupItemEvent e) {
+  @EventHandler public void onPlayerPickupItem(PlayerPickupItemEvent e) {
     if(blockJailPickup) {
       MudkipsPlayer mPlayer = pluginMain.getMudkipsPlayer(e.getPlayer());
       if(mPlayer != null) {
@@ -58,7 +61,7 @@ public class MPlayerListener extends PlayerListener {
       }
     }
   }
-  @Override public void onPlayerInteract(PlayerInteractEvent e) {
+  @EventHandler public void onPlayerInteract(PlayerInteractEvent e) {
     if(e.isCancelled() || e.getClickedBlock() == null) return;
     MudkipsPlayer mPlayer;
     if(blockAllJailInteract) {

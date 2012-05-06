@@ -54,6 +54,7 @@ public class MudkipsPlayer implements Closeable{
   private long lastDeath = 0;
   private int timesDied = 0;
   private ItemStack[] inventory = null;
+  private boolean reloadPlayerObject = false;
   public MudkipsPlayer(Player p, Mudkips mudkipsMain, Server s) {
     name = p.getName();
     pObject = p;
@@ -72,7 +73,7 @@ public class MudkipsPlayer implements Closeable{
     }
   }
   public void sendPlayerListUpdate() {
-    pObject.setPlayerListName(displayName());
+    getPlayer().setPlayerListName(displayName());
   }
   public void reconnect() {
     if(jailedFor > 0) {
@@ -80,7 +81,7 @@ public class MudkipsPlayer implements Closeable{
     }
   }
   public Player getPlayer() {
-	if(pObject != null)
+	if(pObject != null && !reloadPlayerObject)
 	  return pObject;
 	Player pReturn = null;
 	pReturn =  serverObject.getPlayer(name);
@@ -168,29 +169,29 @@ public class MudkipsPlayer implements Closeable{
    if(alterName != null)
 	 return alterName;
    else {
-     if(this.pObject.getDisplayName().equals(this.pObject.getName()))
+     if(this.getPlayer().getDisplayName().equals(this.getPlayer().getName()))
        return alias;
       else
-       return pObject.getDisplayName();
+       return getPlayer().getDisplayName();
    }
  }
  public void setAlterName(String alterName) {
    this.alterName = alterName;
-   pObject.setDisplayName(alterName);
-   pObject.setPlayerListName(alterName);
+   getPlayer().setDisplayName(alterName);
+   getPlayer().setPlayerListName(alterName);
  }
  public String getAlterName() {
    return alterName;
  }
  public Location getLocation() {
-   return pObject.getLocation();
+   return getPlayer().getLocation();
  }
  public void sendMessage(String message) {
   if(!updateBinding())
     return;
   if(message != null) {
     for(String curLine : message.split("\n"))
-      pObject.sendMessage(curLine);
+      getPlayer().sendMessage(curLine);
   }
  }
  public void setHomeBed(Location homeBed) {
@@ -515,7 +516,7 @@ public class MudkipsPlayer implements Closeable{
                     if(selfReference.lastWorld != null) {
                       World reconnectWorld = selfReference.mudkipsMain.worldUtil.attainWorld(selfReference.lastWorld);
                       if(reconnectWorld != null) {
-                        reconnectLocation = selfReference.pObject.getLocation();
+                        reconnectLocation = selfReference.getPlayer().getLocation();
                         reconnectLocation.setWorld(reconnectWorld);
                       }
                     }
@@ -617,13 +618,11 @@ public class MudkipsPlayer implements Closeable{
   public boolean isClosed() {
     return closed;
   }
+  //TODO: Get rid of that method, as it merely seems useless now that getPlayer() will update the pObject
   public boolean updateBinding() {
-    if(this.pObject == null) {
-      this.pObject = serverObject.getPlayer(this.name);
-      if(this.pObject == null) {
-        this.mudkipsMain.playerProvider.playerQuit(this.name);
-        return false;
-      }
+    if(this.getPlayer() == null) {
+      this.mudkipsMain.playerProvider.playerQuit(this.name);
+      return false;
     }
     if(!this.isOnline()) {
       return false;
@@ -631,7 +630,7 @@ public class MudkipsPlayer implements Closeable{
     return true;
   }
   public boolean isEquipped() {
-    for(org.bukkit.inventory.ItemStack curStack : pObject.getInventory().getContents()) {
+    for(org.bukkit.inventory.ItemStack curStack : getPlayer().getInventory().getContents()) {
       if(curStack != null) { 
         if(curStack.getAmount()> 0) {
           return true;
@@ -641,7 +640,7 @@ public class MudkipsPlayer implements Closeable{
     return false;
   }
   public boolean armorEquipped() {
-    for(org.bukkit.inventory.ItemStack curStack : pObject.getInventory().getArmorContents()) {
+    for(org.bukkit.inventory.ItemStack curStack : getPlayer().getInventory().getArmorContents()) {
       if(curStack != null) { 
         if(curStack.getAmount()> 0) {
           return true;
@@ -682,8 +681,8 @@ public class MudkipsPlayer implements Closeable{
     }
     final Location blockChangeLocation = new Location(loc.getWorld(),(double)loc.getBlockX(),(double)(y-3),(double)loc.getBlockZ());
     final org.bukkit.block.Block blockChanged = blockChangeLocation.getBlock();
-    this.pObject.sendBlockChange(blockChangeLocation, Material.BEDROCK, (byte)0);
-    CraftPlayer cp = ((CraftPlayer)this.pObject);
+    this.getPlayer().sendBlockChange(blockChangeLocation, Material.BEDROCK, (byte)0);
+    CraftPlayer cp = ((CraftPlayer)this.getPlayer());
     Vector vec = cp.getMomentum();
     vec.setY(0.3);
     cp.setMomentum(vec);
@@ -693,15 +692,15 @@ public class MudkipsPlayer implements Closeable{
       z+=0.5;
     }
     final Location targetLoc = new Location(loc.getWorld(),x,(double)(y-2),z);
-    this.pObject.teleport(targetLoc);
+    this.getPlayer().teleport(targetLoc);
     chunk = null;
-    final Player playerReference = this.pObject;
+    final Player playerReference = this.getPlayer();
     serverObject.getScheduler().scheduleSyncDelayedTask(mudkipsMain, new Runnable() {public void run() {playerReference.teleport(targetLoc);}}, 4);
     serverObject.getScheduler().scheduleSyncDelayedTask(mudkipsMain, new Runnable() {public void run() {playerReference.teleport(targetLoc);}}, 8);
     serverObject.getScheduler().scheduleSyncDelayedTask(mudkipsMain, new Runnable() {public void run() {playerReference.sendBlockChange(blockChangeLocation, blockChanged.getType(), blockChanged.getData());}}, 100);
     Player reAttainedPlayer = this.serverObject.getPlayer(this.name) ;
     if(reAttainedPlayer != null)
-      this.pObject = reAttainedPlayer;
+      this.reloadPlayerObject = true;
   }
   public void teleportSpawn() {
     if(this.homeBed != null) {
@@ -719,7 +718,7 @@ public class MudkipsPlayer implements Closeable{
     buf.append(name);
     buf.append("\n");
     buf.append("pObject:");
-    buf.append(pObject);
+    buf.append(getPlayer());
     buf.append("\n");
     buf.append("serverObject:");
     buf.append(serverObject);
@@ -758,7 +757,7 @@ public class MudkipsPlayer implements Closeable{
   }
   public boolean slap() {
     if(!updateBinding()) return false;
-    this.pObject.setVelocity(this.pObject.getLocation().getDirection().multiply(-0.8));
+    this.getPlayer().setVelocity(this.getPlayer().getLocation().getDirection().multiply(-0.8));
     final MudkipsPlayer playerReference = this;
     serverObject.getScheduler().scheduleAsyncDelayedTask(mudkipsMain, new Runnable() { public void run() {playerReference.getPlayer().damage(1);}}, 4);
     serverObject.getScheduler().scheduleAsyncDelayedTask(mudkipsMain, new Runnable() { public void run() {playerReference.sendMessage(ChatColor.YELLOW + "You were slapped!"); }}, 12);
@@ -820,11 +819,13 @@ public class MudkipsPlayer implements Closeable{
     if(isJailed()) {
       Location jailLoc = mudkipsMain.warpHandler.getWarp("jail");
       if(jailLoc != null && WorldUtil.calcDistance(toLoc, jailLoc, true) < 10) {
+        reloadPlayerObject = true;
         return true;
       } else {
         return false;
       }
     }
+    reloadPlayerObject = true;
     return true;
   }
   public boolean isJailed() {
@@ -896,13 +897,13 @@ public class MudkipsPlayer implements Closeable{
   public void storeInventory() {
     ItemStack[] inventory = new ItemStack[40];
     
-    ItemStack[] playerInventory = pObject.getInventory().getContents();
+    ItemStack[] playerInventory = getPlayer().getInventory().getContents();
     int i = 0;
     for(; (i < 36 && i<playerInventory.length); i++) {
       inventory[i] = playerInventory[i];
     }
     i = 36;
-    playerInventory = pObject.getInventory().getArmorContents();
+    playerInventory = getPlayer().getInventory().getArmorContents();
     for(int j = 0; (j < 4 && j < playerInventory.length); j++) {
       inventory[i++] = playerInventory[j];
     }
@@ -928,21 +929,21 @@ public class MudkipsPlayer implements Closeable{
     }
   }
   public void updateInventory(ItemStack[] contentArr, ItemStack[] armorArr) {
-    pObject.getInventory().setContents(contentArr);
-    pObject.getInventory().setArmorContents(armorArr);
+    getPlayer().getInventory().setContents(contentArr);
+    getPlayer().getInventory().setArmorContents(armorArr);
 
   }
   public void kill(MudkipsPlayer murderer) {
-    if(pObject.getGameMode() != org.bukkit.GameMode.CREATIVE) {
+    if(getPlayer().getGameMode() != org.bukkit.GameMode.CREATIVE) {
       if(murderer == null || !name.equals(murderer.getName())) {
-        wasSmitted = pObject.getWorld().getFullTime();
+        wasSmitted = getPlayer().getWorld().getFullTime();
         if(murderer != null) {
           smitter = murderer.getName();
         }
       }
       //pObject.damage(20, murderer.getPlayer());
       //pObject.damage(20, null);
-      net.minecraft.server.EntityPlayer ePlayer = ((CraftPlayer)pObject).getHandle(); 
+      net.minecraft.server.EntityPlayer ePlayer = ((CraftPlayer)getPlayer()).getHandle(); 
       ePlayer.damageEntity(net.minecraft.server.DamageSource.GENERIC, 1000);
     } else {
       // Does not work, instead it kills the server!
@@ -952,18 +953,19 @@ public class MudkipsPlayer implements Closeable{
   public void died(org.bukkit.event.entity.PlayerDeathEvent e) {
     lastDeath = System.currentTimeMillis();
     timesDied++;
-    if(wasSmitted > 0 && wasSmitted == pObject.getWorld().getFullTime()) {
+    if(wasSmitted > 0 && wasSmitted == getPlayer().getWorld().getFullTime()) {
       e.setDeathMessage(name + " was smitted"+(smitter==null?"":(" by " + smitter))+".");
     }
     wasSmitted = 0;
     smitter = null;
     String deathMessage = ChatColor.DARK_AQUA + "                    " + e.getDeathMessage();
-    mudkipsMain.chatObj.sendMessageAround(deathMessage, pObject.getLocation(), mudkipsMain.myProps.getIntProperty("death-propagation-distance"));
+    mudkipsMain.chatObj.sendMessageAround(deathMessage, getPlayer().getLocation(), mudkipsMain.myProps.getIntProperty("death-propagation-distance"));
   }
   public int getTimesDied() {
     return timesDied;
   }
   public void respawn(PlayerRespawnEvent e) {
+    reloadPlayerObject = false;
     if(isJailed()) {
       Location jailLocation = mudkipsMain.warpHandler.getWarp("jail");
       if(jailLocation != null) {
@@ -975,6 +977,6 @@ public class MudkipsPlayer implements Closeable{
 //    teleportSpawn();
   }
   public World getWorld() {
-    return pObject.getWorld();
+    return getPlayer().getWorld();
   }
 }

@@ -1,5 +1,7 @@
 package org.quimoniz.mudkips;
 
+/* TODO: Rename Managers to Handlers, because they don't actually manage and try to balance things, but just HANDLE stuff.
+ */
 
 import org.bukkit.event.Event;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -45,6 +47,7 @@ import java.util.List;
 import org.bukkit.event.player.PlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.quimoniz.mudkips.listeners.ListenersManager;
 
 public class Mudkips extends JavaPlugin {
 //    private Properties myProps = null;
@@ -63,6 +66,8 @@ public class Mudkips extends JavaPlugin {
     public PortalHandler portalHandler;
     public BanHandler banHandler;
     public PropertyManager myProps;
+    public ConfigManager configManager;
+    public ListenersManager listenersManager;
 /* DEBUG CODE */
 //    public java.util.logging.Logger debugLog = null;
     
@@ -221,148 +226,7 @@ public class Mudkips extends JavaPlugin {
         errorHandler.logException(exc);
       }
       
-      //Register Player events
-      try {
-        PluginManager pm = this.getServer().getPluginManager();
-        MPlayerListener playerListener = new MPlayerListener(this);
-        pm.registerEvent(Event.Type.PLAYER_CHAT, playerListener, Event.Priority.Normal, this);
-        pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Event.Priority.Normal, this);
-        pm.registerEvent(Event.Type.PLAYER_QUIT, playerListener, Event.Priority.Normal, this);
-        pm.registerEvent(Event.Type.PLAYER_BED_ENTER, playerListener, Event.Priority.Low, this);
-        BlockInteractListener touchListener = null;
-        if(myProps.getBooleanProperty("protect-obsidian") || (myProps.getBooleanProperty("enable-jail") && myProps.getBooleanProperty("protect-jail-break"))) {
-          //pm.registerEvent(Event.Type.BLOCK_DAMAGE, new BlockTouchListener(), Event.Priority.Normal, this);
-          touchListener = new BlockInteractListener(this);
-          if(myProps.getBooleanProperty("enable-jail") && myProps.getBooleanProperty("protect-jail-break")) touchListener.blockJailBreak(true);
-          pm.registerEvent(Event.Type.BLOCK_BREAK, touchListener, Event.Priority.Normal, this);
-        }
-        if(myProps.getBooleanProperty("enable-jail") && myProps.getBooleanProperty("protect-jail-place")) {
-          if(touchListener == null) touchListener = new BlockInteractListener(this);
-          touchListener.blockJailPlace(true);
-          pm.registerEvent(Event.Type.BLOCK_PLACE, touchListener, Event.Priority.Normal, this);
-          touchListener.blockPlacementWasRegistered = true;
-        }
-        if(myProps.getBooleanProperty("enable-jail") && myProps.getBooleanProperty("protect-jail-pickup")) {
-          playerListener.blockJailPickup(true);
-          pm.registerEvent(Event.Type.PLAYER_PICKUP_ITEM, playerListener, Event.Priority.Normal, this);
-        }
-        if(myProps.getBooleanProperty("enable-jail")) {
-          String[] numsBlocked = StringUtil.separate(myProps.getProperty("protect-jail-interact"),',');
-          if(numsBlocked != null && numsBlocked.length > 0) {
-            java.util.ArrayList<Integer> idsBlocked  = new java.util.ArrayList<Integer>(numsBlocked.length);
-            boolean allInteractionsBlocked = false;
-            for(int i = 0; i < numsBlocked.length; i++) {
-              if("*".equals(numsBlocked)) {
-                allInteractionsBlocked = true;
-              } else {
-                try {
-                  idsBlocked.add(new Integer(numsBlocked[i]));
-                } catch(NumberFormatException exc) { }
-              }
-            }
-            if(idsBlocked.size() > 0) {
-              if(allInteractionsBlocked) {
-                playerListener.blockAllJailInteract(true);
-                pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Event.Priority.Normal, this);
-              } else {
-                if(idsBlocked.size() > 0) {
-                  playerListener.blockJailInteract(idsBlocked);
-                  pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Event.Priority.Normal, this);
-                }
-              }
-            }
-          }
-        }
-        String[] numsBlocked = StringUtil.separate(myProps.getProperty("block-fire-placement"),',');
-        if(numsBlocked != null && numsBlocked.length > 0) {
-          java.util.ArrayList<Integer> idsBlocked  = new java.util.ArrayList<Integer>(numsBlocked.length);
-          boolean allFirePlacementBlocked = false;
-          for(int i = 0; i < numsBlocked.length; i++) {
-            if("*".equals(numsBlocked)) {
-              allFirePlacementBlocked = true;
-            } else {
-              try {
-                idsBlocked.add(new Integer(numsBlocked[i]));
-              } catch(NumberFormatException exc) { }
-            }
-          }
-          if(idsBlocked.size() > 0) {
-            if(allFirePlacementBlocked) {
-              if(touchListener == null) touchListener = new BlockInteractListener(this);
-              touchListener.blockAllFirePlace(true);
-              //TODO: Register correct event hooks, with Flint&Steel the event is BLOCK_IGNITE !!!
-              pm.registerEvent(Event.Type.BLOCK_IGNITE, touchListener, Event.Priority.Normal, this);
-              touchListener.blockIgniteWasRegistered = true;
 
-            } else {
-              if(idsBlocked.size() > 0) {
-                if(touchListener == null) touchListener = new BlockInteractListener(this);
-                touchListener.blockFirePlace(idsBlocked);
-                pm.registerEvent(Event.Type.BLOCK_IGNITE, touchListener, Event.Priority.Normal, this);
-                touchListener.blockIgniteWasRegistered = true;
-              }
-            }
-          }
-        }
-        numsBlocked = StringUtil.separate(myProps.getProperty("block-burn"),',');
-        if(numsBlocked != null && numsBlocked.length > 0) {
-          java.util.ArrayList<Integer> idsBlocked  = new java.util.ArrayList<Integer>(numsBlocked.length);
-          boolean allBurningBlocked = false;
-          for(int i = 0; i < numsBlocked.length; i++) {
-            if("*".equals(numsBlocked)) {
-              allBurningBlocked = true;
-            } else {
-              try {
-                idsBlocked.add(new Integer(numsBlocked[i]));
-              } catch(NumberFormatException exc) { }
-            }
-          }
-          if(idsBlocked.size() > 0) {
-            if(allBurningBlocked) {
-              if(touchListener == null) touchListener = new BlockInteractListener(this);
-              touchListener.blockAllBurning(true);
-              pm.registerEvent(Event.Type.BLOCK_BURN, touchListener, Event.Priority.Normal, this);
-              if(!touchListener.blockIgniteWasRegistered) {
-                pm.registerEvent(Event.Type.BLOCK_IGNITE, touchListener, Event.Priority.Normal, this);
-                touchListener.blockIgniteWasRegistered = true;
-              }
-            } else {
-              if(idsBlocked.size() > 0) {
-                if(touchListener == null) touchListener = new BlockInteractListener(this);
-                touchListener.blockBurning(idsBlocked);
-                pm.registerEvent(Event.Type.BLOCK_BURN, touchListener, Event.Priority.Normal, this);
-                if(touchListener.blockIgniteWasRegistered) {
-                  pm.registerEvent(Event.Type.BLOCK_IGNITE, touchListener, Event.Priority.Normal, this);
-                  touchListener.blockIgniteWasRegistered = true;
-                }
-              }
-            }
-          }
-        }
-        if(myProps.getBooleanProperty("tall-grass-makes-grass-block")) {
-          if(touchListener == null) touchListener = new BlockInteractListener(this);
-          touchListener.tallGrassMakesGrassBlock(true);
-          if(!touchListener.blockPlacementWasRegistered) {
-            pm.registerEvent(Event.Type.BLOCK_PLACE, touchListener, Event.Priority.Normal, this);
-            touchListener.blockPlacementWasRegistered = true;
-          }
-        }
-        if(myProps.getBooleanProperty("enable-portals")) {
-          pm.registerEvent(Event.Type.PLAYER_PORTAL, playerListener, Event.Priority.Normal, this);
-        }
-        if(myProps.getBooleanProperty("enable-bans")) {
-          pm.registerEvent(Event.Type.PLAYER_PRELOGIN, playerListener, Event.Priority.Normal, this);
-        }
-        pm.registerEvent(Event.Type.PLAYER_TELEPORT, playerListener, Event.Priority.Normal, this);
-        pm.registerEvent(Event.Type.PLAYER_RESPAWN, playerListener, Event.Priority.Normal, this);
-        
-        MEntityListener entityListener = new MEntityListener(this);
-        pm.registerEvent(Event.Type.ENTITY_DAMAGE, entityListener, Event.Priority.Normal, this);
-        pm.registerEvent(Event.Type.ENTITY_DEATH, entityListener, Event.Priority.Normal, this);
-      } catch(Exception exc) {
-          System.out.println("Exception during registering listeners");
-          errorHandler.logException(exc);
-      }
       
       //parameters: first the Plugin.
       //            second the task
@@ -387,8 +251,9 @@ public class Mudkips extends JavaPlugin {
       }
       saveProperties();
       
-      ConfigManager configManager = new ConfigManager(this.getDataFolder(), this.getServer());
-      
+      configManager = new ConfigManager(this.getDataFolder(), this, this.getServer());
+      configManager.loadWorldConfigs();
+      listenersManager = new ListenersManager(this, server);      
     }
 
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
