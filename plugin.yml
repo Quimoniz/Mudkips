@@ -1,5 +1,5 @@
 name: Mudkips
-version: 0.32
+version: 0.33
 main: org.quimoniz.mudkips.Mudkips
 load: PoStWoRlD
 author: quimoniz
@@ -10,119 +10,144 @@ description: General purpose Plugin
 
 
 commands:
-  online:
-    description: Retrieves the List of players being online
-    usage: /online
-  who:
-    description: Retrieves the List of players being online
-    usage: /who
   playerlist:
+    alias: [online, playerlist]
     description: Retrieves the List of players being online
     usage: /playerlist
+    permission: mudkips.playerlist
   motd:
     description: Displays the welcome message
     usage: /motd
+    permission: mudkips.motd
   afk:
     description: Sets afk status
     usage: /afk
+    permission: mudkips.afk
   help:
     description: Displays a brief help
     usage: /help
+    permission: mudkips.help
   me:
     description: Describe what you are doing
     usage: /me <What you do>
+    permission: mudkips.chat.me
   msg:
     description: Write a message to someone
     usage: /msg <Player> <Message>
+    permission: mudkips.chat.msg
   pmsg:
     description: Permanently write a message to someone
     usage: /msg <Player> <Message>
+    permission: mudkips.chat.pmsg
   weather:
     description: Sets the Weather
     usage: /weather [world] [<Ticks>|On|Off|True|False] [thunder [<Ticks>|On|Off|True|False]]
+    permission: mudkips.weather
   shout:
+    alias: [s]
     description: Shout something to everyone on the server
     usage: /shout <Message>
-  s:
-    description: Shortcut for /shout
-    usage: /s <Message>
+    permission: mudkips.chat.shout
   whisper:
+    alias: [w]
     description: Whisper something
     usage: /whisper <Message>
-  w:
-    description: Whisper something
-    usage: /w <Message>
+    permission: mudkips.chat.whisper
   announce:
     description: Announcing
     usage: /announce <Message>
+    permission: mudkips.announce
   info:
     description: Receive information about a player
     usage: /info <Player>
+    permission: mudkips.info.invoke
   say:
-    description: Just ordinarily saying something
+    description: Just ordinarily say something
     usage: /say <Message>
+    permission: mudkips.chat.say
   loc:
     description: Teleport to a certain Location
     usage: /loc [<player>] <location>
+    permission: mudkips.teleport.loc.warp;mudkips.teleport.loc.pos;mudkips.teleport.loc.playerwarp;mudkips.teleport.loc.playerpos
   locset:
     description: Set a name for a location, warp
     usage: /locset
+    permission: mudkips.teleport.loc.set
   phere:
     description: Teleport a player to you
     usage: /phere <player> [up/down]
+    permission: mudkips.teleport.phere
   pto:
     description: Teleport to a player
     usage: /pto <player> [up/down]
+    permission: mudkips.teleport.pto
   tp:
     description: Teleport a player to another player
     usage: /tp <player> <player>
+    permission: mudkips.teleport.tp
   spawn:
     description: Teleport to your spawn
     usage: /spawn
+    permission: mudkips.spawn
   rename:
     description: Rename yourself
     usage: /rename <new name>
+    permission: mudkips.rename
+  # TODO: Differentiate between spawning of friendly and hostile mobs
   mob:
     description: Spawn a mob
     usage: /mob <mobname> [-c <color>] [-n <count>]
+    permission: mudkips.mob
   slappy:
     description: Slaps a player every time he shouts
     usage: /slappy <player>
+    permission: mudkips.slappy
     credit: Goes to ben657
   slap:
     description: Slaps a player
     usage: /slap <player>
+    permission: mudkips.slaponce
     credit: Goes to ben657
   date:
     description: Returns the current date
     usage: /date
+    permission: mudkips.date.get
   mudkips:
     description: Does some plugin related stuff
     usage: undocumented
+    permission: mudkips.mudkips
   portal:
     description: Do something with a portal
     usage: /portal
+    permission: mudkips.portal
   pvp:
     description: Enable/Disable pvp for yourself
     usage: /pvp [on|off]
+    permission: mudkips.pvp;mudkips.pvp.change
   inventory:
     description: Display the inventory of a player
     usage: /inventory <player>
+    permission: mudkips.iventory
   vicinity:
     description: Tells which players are in chat vicinity
     usage: /vicinity
+    permission: mudkips.vicinity
   kick:
     description: Kicks a player
     usage: /kick <player> [reason]
+    permission: mudkips.kick
   tempban:
     description: Temporarily bans a player
     usage: /tempban <player> <seconds> [reason]
+    permission: mudkips.tempban
   jail:
     description: Jail a player
     usage: /jail <player> <seconds>
+    permission: mudkips.jail
   kill:
     description: Kill yourself or another player
     usage: /kill [<player>]
+    permission: mudkips.kill.self;mudkips.kill.other
 
 
 
@@ -159,6 +184,8 @@ permissions:
       mudkips.kick: true
       mudkips.tempban: true
       mudkips.jail: true
+      mudkips.rename: true
+      mudkips.mudkips: true
   mudkips.teleport.*:
     description: Grants permission to use pto, phere, tp
     children:
@@ -228,6 +255,9 @@ permissions:
     default: op
   mudkips.teleport.loc.playerpos:
     description: Allows teleporting another player to a certain position by using the /loc command
+    default: op
+  mudkips.teleport.loc.set:
+    description: Allows to set locsets
     default: op
   mudkips.chat.me:
     description: Allows for the description of RPG actions
@@ -318,4 +348,10 @@ permissions:
     default: op
   mudkips.jail:
     description: Grants permission to jail players
+    default: op
+  mudkips.rename:
+    description: Grants permission to rename
+    default: op
+  mudkips.mudkips
+    description: Do some plugin related stuff
     default: op
